@@ -1,60 +1,45 @@
 #!/bin/bash
-# install_systemd.sh — wires all eleven runtime organs in as user-scope systemd
-# services, same pattern akasha-oracle already used on this machine.
+# install_systemd.sh — installs the eleven current Renaissance Organs
+# runtime services as user-scope systemd units.
 #
-# Run this FROM WHEREVER YOU EXTRACTED THE TARBALL, after /srv/organs
-# already has every organ in place (i.e. after install.sh).
+# Run this after install.sh has successfully updated /srv/organs.
 #
-# What it does:
-#   1. Copies the .service files to ~/.config/systemd/user/
-#   2. Enables "linger" for your user — WITHOUT this, user-scope services
-#      stop the moment you log out, and won't come back on reboot until
-#      you log in again. With it, they behave like real system services.
-#   3. daemon-reload, enable both units, start registry then memory
-#   4. Verifies both are up and registered with each other
+# It removes the retired Sensei service, reloads systemd, enables the current
+# eleven services, starts them in dependency-sensitive order, and verifies
+# Registry discovery.
 
 set -euo pipefail
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNIT_DIR="$HOME/.config/systemd/user"
 
-echo "== Installing systemd units =="
+echo "== Installing Renaissance Organs systemd units =="
 mkdir -p "$UNIT_DIR"
-cp "$SRC_DIR/organs-registry.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-memory.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-communications.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-orchestrator.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-reflection.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-introspection.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-sandbox.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-critic.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-executive.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-io-interface.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-telemetry.service" "$UNIT_DIR/"
-echo "-> copied to $UNIT_DIR"
+
+for unit in organs-registry.service organs-memory.service organs-communications.service organs-orchestrator.service organs-reflection.service organs-introspection.service organs-sandbox.service organs-critic.service organs-executive.service organs-io-interface.service organs-telemetry.service; do
+    cp "$SRC_DIR/$unit" "$UNIT_DIR/"
+done
+
+echo "-> copied current eleven units to $UNIT_DIR"
+
+echo
+echo "== Removing retired Sensei service =="
+systemctl --user disable --now organs-sensei.service 2>/dev/null || true
+rm -f "$UNIT_DIR/organs-sensei.service"
 
 echo
 echo "== Enabling linger for $USER =="
-echo "   (without this, these services die when you log out — needs sudo once)"
 sudo loginctl enable-linger "$USER"
 
 echo
-echo "== Reloading systemd, enabling units =="
+echo "== Reloading systemd and enabling current services =="
 systemctl --user daemon-reload
-systemctl --user enable organs-registry.service
-systemctl --user enable organs-memory.service
-systemctl --user enable organs-communications.service
-systemctl --user enable organs-orchestrator.service
-systemctl --user enable organs-reflection.service
-systemctl --user enable organs-introspection.service
-systemctl --user enable organs-sandbox.service
-systemctl --user enable organs-critic.service
-systemctl --user enable organs-executive.service
-systemctl --user enable organs-io-interface.service
-systemctl --user enable organs-telemetry.service
+for service in organs-registry.service organs-memory.service organs-communications.service organs-orchestrator.service organs-reflection.service organs-introspection.service organs-sandbox.service organs-critic.service organs-executive.service organs-io-interface.service organs-telemetry.service; do
+    systemctl --user enable "$service"
+done
 
 echo
-echo "== Starting registry first, then the rest (Critic before Executive, Executive before I/O Interface) =="
+echo "== Starting current services =="
 systemctl --user start organs-registry.service
 sleep 2
 systemctl --user start organs-memory.service
@@ -74,81 +59,33 @@ sleep 2
 
 echo
 echo "== Status =="
-systemctl --user status organs-registry.service --no-pager -l | head -8
-echo
-systemctl --user status organs-memory.service --no-pager -l | head -8
-echo
-systemctl --user status organs-communications.service --no-pager -l | head -8
-echo
-systemctl --user status organs-orchestrator.service --no-pager -l | head -8
-echo
-systemctl --user status organs-reflection.service --no-pager -l | head -8
-echo
-systemctl --user status organs-introspection.service --no-pager -l | head -8
-echo
-systemctl --user status organs-sandbox.service --no-pager -l | head -8
-echo
-systemctl --user status organs-critic.service --no-pager -l | head -8
-echo
-systemctl --user status organs-executive.service --no-pager -l | head -8
-echo
-systemctl --user status organs-io-interface.service --no-pager -l | head -8
-echo
-systemctl --user status organs-telemetry.service --no-pager -l | head -8
+for service in organs-registry organs-memory organs-communications organs-orchestrator organs-reflection organs-introspection organs-sandbox organs-critic organs-executive organs-io-interface organs-telemetry; do
+    systemctl --user status "$service.service" --no-pager -l | head -8
+    echo
+done
 
-echo
-echo "== Verifying they actually found each other =="
+echo "== Verifying Registry discovery =="
 sleep 2
-curl -s localhost:8000/registry/organs | python3 -m json.tool || echo "(registry not answering yet — check: journalctl --user -u organs-registry -f)"
+curl -s localhost:8000/registry/organs | python3 -m json.tool || {
+    echo "(registry not answering yet — inspect: journalctl --user -u organs-registry.service -f)"
+    exit 1
+}
 
 echo
 echo "== Done =="
-echo "Reflection is running but OFF — confirm with:"
+echo
+echo "Reflection is running but OFF by default:"
 echo "  curl localhost:8004/reflection/status"
-echo "Enable it (it'll start muttering into Memory on its configured interval):"
-echo "  curl -X POST localhost:8004/reflection/enable"
 echo
-echo "See what Introspection knows about this machine:"
+echo "Useful runtime checks:"
 echo "  curl localhost:8005/introspect/summary"
-echo
-echo "Confirm Sandbox can actually see Docker:"
 echo "  curl localhost:8006/sandbox/doctor"
-echo
-echo "See Critic's actual rule set:"
 echo "  curl localhost:8007/critic/rules"
-echo
-echo "Create a test goal in Executive:"
-echo "  curl -X POST localhost:8008/executive/goals -H 'content-type: application/json' -d '{\"description\":\"test\"}'"
-echo
-echo "Try the real front door — natural language in, right organ out:"
-echo "  curl -X POST localhost:8009/io/handle -H 'content-type: application/json' -d '{\"text\":\"memory stats\"}'"
-echo "  curl -X POST localhost:8009/io/handle -H 'content-type: application/json' -d '{\"text\":\"restart ollama\"}'"
-echo "See the whole catalog it understands:"
+echo "  curl localhost:8011/telemetry/stats"
 echo "  curl localhost:8009/io/catalog"
 echo
-echo
-echo "Telemetry is the observation layer — see what it knows so far:"
-echo "  curl localhost:8011/telemetry/stats"
-echo "  curl localhost:8011/telemetry/recent"
-echo "Nothing calls it yet — instrumenting the other organs to emit events"
-echo "is the next real step, not done automatically by this script."
-echo
-echo "Useful commands going forward:"
-echo "  systemctl --user status organs-memory organs-communications organs-orchestrator organs-reflection organs-introspection organs-sandbox organs-critic organs-executive organs-io-interface organs-telemetry"
+echo "Useful service commands:"
+echo "  systemctl --user status organs-registry organs-memory organs-communications organs-orchestrator organs-reflection organs-introspection organs-sandbox organs-critic organs-executive organs-io-interface organs-telemetry"
 echo "  systemctl --user restart organs-memory"
-echo "  journalctl --user -u organs-memory -f      # live logs"
-echo "  journalctl --user -u organs-communications -f"
-echo "  journalctl --user -u organs-orchestrator -f"
-echo "  journalctl --user -u organs-reflection -f"
-echo "  journalctl --user -u organs-introspection -f"
-echo "  journalctl --user -u organs-sandbox -f"
-echo "  journalctl --user -u organs-critic -f"
-echo "  journalctl --user -u organs-executive -f"
-echo "  journalctl --user -u organs-io-interface -f"
-echo "  journalctl --user -u -f"
-echo "  journalctl --user -u organs-telemetry -f"
-echo "  journalctl --user -u organs-registry -f"
-echo
-echo "Orchestrator's services.json was created with defaults for ollama and"
-echo "open-webui. Check it points at the right OI container name:"
-echo "  cat /srv/organs/orchestrator/services.json"
+echo "  journalctl --user -u organs-memory.service -f"
+echo "  journalctl --user -u organs-registry.service -f"
