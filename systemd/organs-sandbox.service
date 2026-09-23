@@ -1,0 +1,16 @@
+[Unit]
+Description=Organs Sandbox — ephemeral isolated code execution
+After=network.target organs-registry.service
+Wants=organs-registry.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/organs/sandbox
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/srv/organs/sandbox/sandbox.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8006
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Runtime state — never commit live machine state
+**/data/*.sqlite3
+**/data/*.jsonl
+**/data/*.db
+**/state.json
+**/history.jsonl
+**/seen_chains.json
+**/nudge_history.jsonl
+
+# Local configuration / secrets
+*.env
+!.env.example
+systemd/*.env
+!systemd/*.env.example
+
+# OS/editor noise
+.DS_Store
+*.swp
+*~

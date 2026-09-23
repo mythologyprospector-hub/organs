@@ -1,0 +1,20 @@
+{
+  "ollama": {
+    "driver": "systemd_system",
+    "unit": "ollama.service",
+    "always_on": true,
+    "description": "Local LLM inference (Ollama)"
+  },
+  "open-webui": {
+    "driver": "docker",
+    "container": "open-webui",
+    "always_on": true,
+    "description": "Chat UI (Open WebUI, in Docker)"
+  },
+  "oi-sandbox": {
+    "driver": "docker",
+    "container": "oi-sandbox",
+    "always_on": false,
+    "description": "OI agent sandbox \u2014 on-demand, fine to be stopped by default"
+  }
+}

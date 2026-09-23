@@ -1,0 +1,16 @@
+[Unit]
+Description=Organs I/O Interface — the real front door
+After=network.target organs-registry.service organs-critic.service organs-executive.service
+Wants=organs-registry.service organs-critic.service organs-executive.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/organs/io_interface
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/srv/organs/io_interface/io_interface.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8009
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Organs Executive — goal/plan/step tracking, Critic-gated execution
+After=network.target organs-registry.service organs-critic.service
+Wants=organs-registry.service organs-critic.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/organs/executive
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/srv/organs/executive/executive.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8008
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

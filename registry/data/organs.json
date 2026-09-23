@@ -1,0 +1,179 @@
+{
+  "memory": {
+    "name": "memory",
+    "base_url": "http://localhost:8001",
+    "version": "0.3.0",
+    "capabilities": [
+      "add",
+      "recall",
+      "confirm",
+      "list",
+      "stats",
+      "backfill",
+      "consolidate",
+      "proposals",
+      "decide",
+      "facts",
+      "pin",
+      "unpin",
+      "prune",
+      "archive",
+      "revive",
+      "scars",
+      "promises",
+      "unknowable",
+      "relations",
+      "doctor"
+    ],
+    "first_registered": 1786017553.6570976,
+    "last_heartbeat": 1790081684.0356698
+  },
+  "communications": {
+    "name": "communications",
+    "base_url": "http://localhost:8002",
+    "version": "0.1.0",
+    "capabilities": [
+      "publish",
+      "peek",
+      "consume",
+      "topics",
+      "consumers",
+      "reset_consumer",
+      "dispatch",
+      "reset_dispatch",
+      "doctor"
+    ],
+    "first_registered": 1786098501.9465432,
+    "last_heartbeat": 1790081684.0361812
+  },
+  "orchestrator": {
+    "name": "orchestrator",
+    "base_url": "http://localhost:8003",
+    "version": "0.1.0",
+    "capabilities": [
+      "list_services",
+      "get_service",
+      "start",
+      "stop",
+      "restart",
+      "doctor"
+    ],
+    "first_registered": 1786133540.7840328,
+    "last_heartbeat": 1790081684.421088
+  },
+  "reflection": {
+    "name": "reflection",
+    "base_url": "http://localhost:8004",
+    "version": "0.1.0",
+    "capabilities": [
+      "status",
+      "enable",
+      "disable",
+      "configure",
+      "tick",
+      "history"
+    ],
+    "first_registered": 1786183794.199301,
+    "last_heartbeat": 1790081684.551412
+  },
+  "introspection": {
+    "name": "introspection",
+    "base_url": "http://localhost:8005",
+    "version": "0.1.0",
+    "capabilities": [
+      "summary",
+      "host",
+      "cpu",
+      "memory",
+      "disk",
+      "ollama",
+      "docker",
+      "dev_tools",
+      "refresh"
+    ],
+    "first_registered": 1786200383.244933,
+    "last_heartbeat": 1790081684.3032951
+  },
+  "sandbox": {
+    "name": "sandbox",
+    "base_url": "http://localhost:8006",
+    "version": "0.1.0",
+    "capabilities": [
+      "run_job",
+      "languages",
+      "doctor"
+    ],
+    "first_registered": 1786216978.276369,
+    "last_heartbeat": 1790081684.429417
+  },
+  "critic": {
+    "name": "critic",
+    "base_url": "http://localhost:8007",
+    "version": "0.1.0",
+    "capabilities": [
+      "evaluate",
+      "rules"
+    ],
+    "first_registered": 1786235209.1065705,
+    "last_heartbeat": 1790081684.0188074
+  },
+  "executive": {
+    "name": "executive",
+    "base_url": "http://localhost:8008",
+    "version": "0.1.0",
+    "capabilities": [
+      "create_goal",
+      "submit_plan",
+      "approve_step",
+      "reject_step",
+      "execute_next_step",
+      "get_goal",
+      "list_goals"
+    ],
+    "first_registered": 1786235210.053448,
+    "last_heartbeat": 1790081684.168351
+  },
+  "io_interface": {
+    "name": "io_interface",
+    "base_url": "http://localhost:8009",
+    "version": "0.1.0",
+    "capabilities": [
+      "handle",
+      "interpret",
+      "catalog"
+    ],
+    "first_registered": 1786286885.8480275,
+    "last_heartbeat": 1790081684.5418062
+  },
+  "telemetry": {
+    "name": "telemetry",
+    "base_url": "http://localhost:8011",
+    "version": "0.1.0",
+    "capabilities": [
+      "emit",
+      "query",
+      "get_event",
+      "timeline",
+      "stats",
+      "backfill"
+    ],
+    "first_registered": 1786910441.0012844,
+    "last_heartbeat": 1790081684.3117065
+  },
+  "sensei": {
+    "name": "sensei",
+    "base_url": "http://localhost:8012",
+    "version": "0.1.0",
+    "capabilities": [
+      "status",
+      "mode",
+      "nudge",
+      "history",
+      "respond",
+      "detect_shell",
+      "detect_editor"
+    ],
+    "first_registered": 1787629279.707855,
+    "last_heartbeat": 1787794476.9691103
+  }
+}

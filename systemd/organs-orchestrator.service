@@ -1,0 +1,16 @@
+[Unit]
+Description=Organs Orchestrator — manages OS-level service dependencies
+After=network.target organs-registry.service
+Wants=organs-registry.service
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/organs/orchestrator
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/srv/organs/orchestrator/orchestrator.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8003
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
