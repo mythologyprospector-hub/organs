@@ -5,7 +5,7 @@
 # Run this after install.sh has successfully updated /srv/organs.
 #
 # It removes the retired Sensei service, reloads systemd, enables the current
-# eleven services, starts them in dependency-sensitive order, and verifies
+# eleven services, restarts them in dependency-sensitive order, and verifies
 # Registry discovery.
 
 set -euo pipefail
@@ -39,22 +39,22 @@ for service in organs-registry.service organs-memory.service organs-communicatio
 done
 
 echo
-echo "== Starting current services =="
-systemctl --user start organs-registry.service
+echo "== Restarting current services =="
+systemctl --user restart organs-registry.service
 sleep 2
-systemctl --user start organs-memory.service
-systemctl --user start organs-communications.service
-systemctl --user start organs-orchestrator.service
-systemctl --user start organs-reflection.service
-systemctl --user start organs-introspection.service
-systemctl --user start organs-sandbox.service
-systemctl --user start organs-critic.service
+systemctl --user restart organs-memory.service
+systemctl --user restart organs-communications.service
+systemctl --user restart organs-orchestrator.service
+systemctl --user restart organs-reflection.service
+systemctl --user restart organs-introspection.service
+systemctl --user restart organs-sandbox.service
+systemctl --user restart organs-critic.service
 sleep 1
-systemctl --user start organs-executive.service
+systemctl --user restart organs-executive.service
 sleep 1
-systemctl --user start organs-io-interface.service
+systemctl --user restart organs-io-interface.service
 sleep 1
-systemctl --user start organs-telemetry.service
+systemctl --user restart organs-telemetry.service
 sleep 2
 
 echo
