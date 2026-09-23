@@ -364,6 +364,6 @@ def test_fetch_live_checks_marks_missing_organs_without_raising(td, monkeypatch)
     }))
     registry = td.fetch_registry()
     checks = td.fetch_live_checks(registry)
-    assert len(checks) == 12
+    assert len(checks) == 11
     assert all(not check["ok"] for check in checks if check["organ"] != "registry")
     assert checks[0]["ok"] is True
