@@ -139,7 +139,8 @@ def test_fetch_all_missing_organ_from_registry_is_a_clean_error(td, monkeypatch)
         "http://registry.test/registry/organs": [],
     }))
     data = td.fetch_all()
-    assert td.is_error(data["sandbox_doctor"])\n    assert "not currently registered" in data["sandbox_doctor"]["error"]
+    assert td.is_error(data["sandbox_doctor"])
+    assert "not currently registered" in data["sandbox_doctor"]["error"]
 
 
 @pytest.mark.parametrize("seconds,expected_substring", [
