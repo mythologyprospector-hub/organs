@@ -8,7 +8,7 @@ Type=simple
 WorkingDirectory=/srv/organs/sandbox
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/srv/organs/sandbox/sandbox.env
-ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8006
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8006
 Restart=on-failure
 RestartSec=3
 

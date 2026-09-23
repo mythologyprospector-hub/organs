@@ -2,94 +2,99 @@
 
 ## Status
 
-This document defines the intended role of **Organs** as a reusable runtime substrate.
-It is a migration/architecture baseline, not a claim that the existing implementation
-already satisfies every item below.
+Organs is the **Renaissance runtime substrate**.
 
-## Purpose
+This document describes the technical role of the repository. Renaissance's
+constitutional and foundational documents remain the higher-level authority.
 
-Organs provides the shared machinery on which larger systems can be built:
+## Layering
 
-- organ discovery and lifecycle
-- inter-organ communication
-- durable state and memory primitives
-- deterministic safety gates
-- explicit execution
-- constrained sandboxed execution
-- system orchestration
-- introspection and reflection
-- operational telemetry
-- human-facing inspection
+    Renaissance constitutional canon
+                |
+                v
+    Renaissance architecture and domain contracts
+                |
+                v
+    Organs runtime substrate
+                |
+                +-- Registry
+                +-- Communications / BUS
+                +-- Memory
+                +-- Sandbox
+                +-- Critic
+                +-- Executive
+                +-- Orchestrator
+                +-- Introspection
+                +-- Reflection
+                +-- Telemetry
+                +-- human/operator interfaces
 
-Domain-specific capabilities should live in separate organs and compose through these
-shared contracts rather than forcing the substrate to become the domain application.
+The important boundary is directional:
 
-## Existing substrate
+**Renaissance tells Organs what the larger system requires. Organs does not
+decide what Renaissance is.**
 
-The imported implementation contains these principal organs/components:
+## Current components
 
-| Component | Role |
+| Component | Runtime responsibility |
 |---|---|
-| Registry | discovery, registration, heartbeat, lookup |
-| Communications / BUS | persistent pub/sub and dispatch |
-| Memory | durable knowledge/state primitives |
+| Registry | discovery, registration, heartbeat, staleness |
+| Communications / BUS | persistent pull-based event transport and dispatch |
+| Memory | durable runtime memory and state primitives |
+| Sandbox | bounded isolated execution |
 | Critic | deterministic pre-action risk classification |
-| Executive | explicit goal/plan/step tracking and Critic-gated execution |
-| Sandbox | ephemeral constrained execution |
-| Orchestrator | fixed, configuration-defined service control |
-| Introspection | live system self-knowledge |
-| Reflection | optional background reflection |
-| Telemetry | operational observation/history |
-| I/O Interface | deterministic front door and routing |
-| TUI | human-facing monitoring/inspection |
-| Sensei | local developer/context assistance |
+| Executive | explicit goal/plan/step tracking and gated execution |
+| Orchestrator | control of a fixed, approved service set |
+| Introspection | observation of live system state |
+| Reflection | optional background reflection that does not own execution |
+| Telemetry | append-oriented operational observation |
+| I/O Interface | deterministic human-facing request routing |
+| TUI | human-facing inspection and operation |
+| Sensei | optional local operator/developer assistance |
 
-## Core contracts to preserve
+## Authority boundaries
 
-1. Organs are independently addressable services.
-2. Registry is the discovery mechanism; organs should not hardcode peer addresses when
-   discovery is appropriate.
-3. Communication uses the BUS for asynchronous inter-organ events where appropriate.
-4. The standard organ boundary exposes `/health` and `/info` and uses the shared error
-   envelope.
-5. Operational requests/mutations are observable through Telemetry at the organ boundary.
-6. Critic can reject/recommend but is not an authorization authority for risky actions.
-7. Executive tracks explicit work rather than inventing autonomous plans.
-8. Sandbox is the execution containment boundary and does not confer trust on outputs.
-9. Orchestrator controls only its fixed, approved service set; it does not become an
-   arbitrary command execution endpoint.
-10. Persistent state must have an explicit owner and must not be silently conflated with
-    transient runtime state.
+Organs contains mechanisms, not sovereignty.
 
-## Extension model
+- Registry discovers; it does not decide.
+- BUS transports; it does not interpret.
+- Memory stores runtime state; it does not establish Renaissance truth.
+- Critic classifies configured risks; it is not a moral or constitutional
+  authority.
+- Executive coordinates explicitly approved work; it is not sovereign.
+- Sandbox contains execution; successful execution does not make an output
+  true.
+- Orchestrator controls only its explicit service allowlist.
+- Telemetry records operational events; operational telemetry is not epistemic
+  evidence.
+- Reflection may suggest or record; it does not grant itself authority.
+- I/O Interface translates within a fixed catalog; it does not invent
+  capabilities.
+- TUI/Sensei expose human interaction; neither becomes a hidden authority.
 
-A new domain organ should be able to:
+## Domain boundary
 
-1. implement the standard organ lifecycle;
-2. register with Registry;
-3. discover peers through Registry;
-4. communicate through the shared BUS/client conventions;
-5. emit boundary telemetry;
-6. use Memory, Sandbox, Critic, Executive, or other substrate services through explicit
-   contracts; and
-7. remain independently testable and replaceable.
+Renaissance domain capabilities such as Episteme, Provenance, Atlas, Unknowns,
+Experimentalist, Referee, and Rosetta should remain independently defined.
 
-## Current architectural direction
+They may consume Organs services through explicit interfaces.
 
-Organs is the substrate, not the Renaissance application itself.
+Organs should not absorb their domain semantics merely because doing so would
+be convenient.
 
-Future domain organs such as Episteme, Provenance, Atlas, Unknowns, Experimentalist,
-Referee, and Rosetta belong above this substrate and should be introduced only after
-Human Gate approval of their contracts.
+## Replaceability
 
-## Non-goals
+An organ is replaceable when another implementation can satisfy its published
+contract without requiring the rest of the system to know its internals.
 
-Organs does not itself define:
+This is a design requirement, not a claim that every current organ already
+meets it perfectly.
 
-- a single worldview or doctrine;
-- a civilization-wide knowledge ontology;
-- an autonomous machine authority;
-- a universal planning intelligence;
-- a replacement for human judgment.
+## Current technical posture
 
-Those concerns belong to higher-level projects and their own canonical documents.
+The repository is Python/FastAPI based and is intentionally organized as
+independently testable services rather than one shared application process.
+
+The test runner executes service suites in isolated subprocesses. That is an
+implementation constraint of the current layout, not a claim that isolation
+is the only possible future architecture.

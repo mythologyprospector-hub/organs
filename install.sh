@@ -40,7 +40,7 @@ else
     echo "-> $DEST already exists, adding into it"
 fi
 
-echo "-> Copying shared/, registry/, memory/, communications/, orchestrator/, reflection/, introspection/, sandbox/, critic/, executive/, io_interface/, forge/, telemetry/, tui/"
+echo "-> Copying shared/, registry/, memory/, communications/, orchestrator/, reflection/, introspection/, sandbox/, critic/, executive/, io_interface/, telemetry/, tui/, sensei/"
 sudo cp -r "$SRC_DIR/shared" "$DEST/"
 sudo cp -r "$SRC_DIR/registry" "$DEST/"
 sudo cp -r "$SRC_DIR/memory" "$DEST/"
@@ -52,9 +52,9 @@ sudo cp -r "$SRC_DIR/sandbox" "$DEST/"
 sudo cp -r "$SRC_DIR/critic" "$DEST/"
 sudo cp -r "$SRC_DIR/executive" "$DEST/"
 sudo cp -r "$SRC_DIR/io_interface" "$DEST/"
-sudo cp -r "$SRC_DIR/forge" "$DEST/"
 sudo cp -r "$SRC_DIR/telemetry" "$DEST/"
-sudo cp -r "$SRC_DIR/tui" "$DEST/"  # a tool, not an organ — no port, no systemd unit
+sudo cp -r "$SRC_DIR/tui" "$DEST/"  # operator tool
+sudo cp -r "$SRC_DIR/sensei" "$DEST/"  # optional operator tool, no port
 
 echo "-> Copying project docs (README, CANON, CONTRIBUTING, DEV_NOTES, SECURITY) and test tooling"
 for f in README.md CANON.md CONTRIBUTING.md DEV_NOTES.md SECURITY.md run_all_tests.sh pytest.ini requirements.txt; do
@@ -94,7 +94,7 @@ echo
 # sitting correctly on disk the whole time. Detect and say so loudly,
 # rather than leaving this as a silent trap on every future update.
 RUNNING_ORGANS=()
-for organ_service in registry memory communications orchestrator reflection introspection sandbox critic executive io-interface forge telemetry; do
+for organ_service in registry memory communications orchestrator reflection introspection sandbox critic executive io-interface telemetry; do
     if systemctl --user is-active --quiet "organs-${organ_service}.service" 2>/dev/null; then
         RUNNING_ORGANS+=("organs-${organ_service}")
     fi
@@ -124,18 +124,17 @@ echo "  cd $DEST && ./run_all_tests.sh"
 echo
 echo "To run it (two terminals — systemd comes once the organ set is settled):"
 echo
-echo "  cd $DEST/registry       && uvicorn main:app --host 0.0.0.0 --port 8000"
-echo "  cd $DEST/memory         && uvicorn main:app --host 0.0.0.0 --port 8001"
-echo "  cd $DEST/communications && uvicorn main:app --host 0.0.0.0 --port 8002"
-echo "  cd $DEST/orchestrator   && uvicorn main:app --host 0.0.0.0 --port 8003"
-echo "  cd $DEST/reflection     && uvicorn main:app --host 0.0.0.0 --port 8004"
-echo "  cd $DEST/introspection  && uvicorn main:app --host 0.0.0.0 --port 8005"
-echo "  cd $DEST/sandbox        && uvicorn main:app --host 0.0.0.0 --port 8006"
-echo "  cd $DEST/critic         && uvicorn main:app --host 0.0.0.0 --port 8007"
-echo "  cd $DEST/executive      && uvicorn main:app --host 0.0.0.0 --port 8008"
-echo "  cd $DEST/io_interface   && uvicorn main:app --host 0.0.0.0 --port 8009"
-echo "  cd $DEST/forge          && uvicorn main:app --host 0.0.0.0 --port 8010"
-echo "  cd $DEST/telemetry      && uvicorn main:app --host 0.0.0.0 --port 8011"
+echo "  cd $DEST/registry       && uvicorn main:app --host 127.0.0.1 --port 8000"
+echo "  cd $DEST/memory         && uvicorn main:app --host 127.0.0.1 --port 8001"
+echo "  cd $DEST/communications && uvicorn main:app --host 127.0.0.1 --port 8002"
+echo "  cd $DEST/orchestrator   && uvicorn main:app --host 127.0.0.1 --port 8003"
+echo "  cd $DEST/reflection     && uvicorn main:app --host 127.0.0.1 --port 8004"
+echo "  cd $DEST/introspection  && uvicorn main:app --host 127.0.0.1 --port 8005"
+echo "  cd $DEST/sandbox        && uvicorn main:app --host 127.0.0.1 --port 8006"
+echo "  cd $DEST/critic         && uvicorn main:app --host 127.0.0.1 --port 8007"
+echo "  cd $DEST/executive      && uvicorn main:app --host 127.0.0.1 --port 8008"
+echo "  cd $DEST/io_interface   && uvicorn main:app --host 127.0.0.1 --port 8009"
+echo "  cd $DEST/telemetry      && uvicorn main:app --host 127.0.0.1 --port 8011"
 echo
 echo "Not a service — a tool. Once organs are running, watch them live:"
 echo "  cd $DEST/tui            && python3 organs_tui.py"
@@ -150,10 +149,6 @@ echo
 echo "Sandbox runs jobs in Docker — check it can see Docker with:"
 echo "  curl localhost:8006/sandbox/doctor"
 echo
-echo "Forge generates code via a REAL Ollama call — no sim, no stub. Check"
-echo "it can actually reach Ollama with:"
-echo "  curl localhost:8010/health"
-echo "Default model is qwen2.5-coder:7b — override per-request or set FORGE_MODEL."
 echo
 echo "Telemetry is now wired into the shared organ convention — HTTP requests,"
 echo "mutations, and failures are observed automatically. Correlation propagation"

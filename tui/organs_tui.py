@@ -39,7 +39,7 @@ from tui_test_runner import TestRunner, available_suites
 REFRESH_SECONDS = float(os.environ.get("TUI_REFRESH_SECONDS", "3.0"))
 
 TAB_NAMES = [
-    "Overview", "Tests", "Memory", "Forge", "Telemetry",
+    "Overview", "Tests", "Memory", "Sandbox", "Telemetry",
     "Executive", "Orchestrator", "Misc", "Diagnostics", "Input",
 ]
 INPUT_TAB_INDEX = TAB_NAMES.index("Input")
@@ -160,49 +160,20 @@ def draw_memory(win, data):
             y += 1
 
 
-def draw_forge(win, data):
+def draw_sandbox(win, data):
     y = 2
-    _safe_addstr(win, y, 2, "FORGE — recent jobs", curses.A_BOLD)
+    _safe_addstr(win, y, 2, "SANDBOX — execution boundary", curses.A_BOLD)
     y += 1
-    jobs = data["forge_jobs"]
-    if td.is_error(jobs):
-        _safe_addstr(win, y, 2, f"unreachable: {jobs['error']}", curses.A_DIM)
+    doctor = data["sandbox_doctor"]
+    if td.is_error(doctor):
+        _safe_addstr(win, y, 2, f"unreachable: {doctor['error']}", curses.A_DIM)
         return
-    if not jobs:
-        _safe_addstr(win, y, 2, "(no jobs yet)", curses.A_DIM)
-        return
-    _safe_addstr(win, y, 2, f"{'JOB':<14}{'LANGUAGE':<10}{'FILES':<8}{'TESTS':<10}{'AGE'}", curses.A_UNDERLINE)
-    y += 1
-    now = time.time()
-    for job in jobs[:20]:
-        sandbox_result = job.get("sandbox_result")
-        # Keyed off sandbox_result being present, not test_command — the
-        # list endpoint didn't always include test_command (real bug,
-        # caught live on mythos1 via this exact panel: every row showed
-        # '-' even for jobs that genuinely had tests, because this
-        # summary never carried the field this used to check). Fixed on
-        # both ends — op_list_jobs now includes test_command too — but
-        # sandbox_result presence is the more direct signal for "were
-        # tests actually attempted," so keep using it even now that
-        # test_command is available again.
-        if job.get("deleted"):
-            test_status = "deleted"
-        elif sandbox_result is None:
-            test_status = "-"
-        elif td.is_error(sandbox_result) or (isinstance(sandbox_result, dict) and "error" in sandbox_result):
-            test_status = "error"
-        elif sandbox_result.get("exit_code") == 0:
-            test_status = "passed"
-        else:
-            test_status = f"exit {sandbox_result.get('exit_code')}"
-        age = td.format_age(now - job["created"]) if job.get("created") else "?"
-        _safe_addstr(
-            win, y, 2,
-            f"{job.get('job_id', '?'):<14}{job.get('language', '?'):<10}"
-            f"{len(job.get('files', [])):<8}{test_status:<10}{age}",
-        )
-        y += 1
-
+    for key in ("docker_available", "docker_version", "configured_images"):
+        if key in doctor:
+            _safe_addstr(win, y, 2, f"{key:<24}{doctor[key]}")
+            y += 1
+    if not doctor:
+        _safe_addstr(win, y, 2, "(no diagnostic data)", curses.A_DIM)
 
 def draw_telemetry(win, data):
     y = 2
@@ -618,7 +589,7 @@ def _summarize_io_response(response: dict) -> list:
             f"body: {str(response.get('body'))[:100]}"]
 
 
-DRAW_FUNCS = [draw_overview, draw_memory, draw_forge, draw_telemetry,
+DRAW_FUNCS = [draw_overview, draw_memory, draw_sandbox, draw_telemetry,
               draw_orchestrator, draw_misc]
 
 

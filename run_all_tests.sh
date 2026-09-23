@@ -3,7 +3,7 @@
 #
 # Deliberately does NOT run `pytest` once from the repo root. Every organ
 # has a file called main.py, memory_core.py-style core module, etc. — if
-# all twelve organs' tests ran in ONE Python process, the second organ's
+# all eleven organs' tests ran in ONE Python process, the second organ's
 # `import main` would silently return the FIRST organ's already-cached
 # module instead of loading its own (Python caches by bare module name
 # in sys.modules, and pytest's own import-mode setting can't change
@@ -20,14 +20,14 @@ TMP_OUTPUT=$(mktemp)
 trap 'rm -f "$TMP_OUTPUT"' EXIT
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ORGANS=(registry memory communications orchestrator reflection introspection sandbox critic executive io_interface forge telemetry sensei)
+ORGANS=(registry memory communications orchestrator reflection introspection sandbox critic executive io_interface telemetry)
 # Tools: real, tested code that lives in this repo but is NOT an organ —
 # no main.py, no HTTP service, nothing registers with the Registry.
 # tui/ is a client, the first thing here that only consumes; it gets the
 # same subprocess-isolated test treatment for the same reason (its own
 # fixtures reload tui_data.py fresh, same "no shared venv" principle),
 # but it's kept in its own list so this script never calls it an organ.
-TOOLS=(tui)
+TOOLS=(tui sensei)
 
 total_pass=0
 total_fail=0

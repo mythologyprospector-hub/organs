@@ -8,7 +8,7 @@ Type=simple
 WorkingDirectory=/srv/organs/critic
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/srv/organs/critic/critic.env
-ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8007
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8007
 Restart=on-failure
 RestartSec=3
 

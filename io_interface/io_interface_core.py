@@ -104,29 +104,6 @@ def _build_sandbox_python(m):
     return "/sandbox/jobs", {"language": "python", "files": {"main.py": code}, "command": "python main.py"}
 
 
-_FORGE_LANGUAGE_EXT = {"python": "py", "node": "js"}
-
-
-def _build_forge_build(m):
-    filename_hint = m.group(2)
-    spec = m.group(3).strip().rstrip(".")
-
-    # deliberately narrow: Sandbox only knows "python" and "node" (see
-    # sandbox_core.ALLOWED_LANGUAGES) — anything this doesn't recognize
-    # falls back to python rather than passing through an arbitrary
-    # word Forge/Sandbox wouldn't understand later if this build is
-    # ever extended with a test step
-    text_lower = m.string.lower()
-    language = "node" if re.search(r"\b(?:node|javascript|js)\b", text_lower) else "python"
-    ext = _FORGE_LANGUAGE_EXT[language]
-
-    if filename_hint:
-        filename = filename_hint if "." in filename_hint else f"{filename_hint}.{ext}"
-    else:
-        filename = f"main.{ext}"
-
-    return "/forge/build", {"spec": spec, "language": language, "filename": filename}
-
 
 CATALOG = [
     {"name": "memory_recall", "organ": "memory", "method": "GET",
@@ -204,12 +181,6 @@ CATALOG = [
      "build": _build_orchestrator_status,
      "example": "is ollama running"},
 
-    {"name": "forge_build", "organ": "forge", "method": "POST",
-     "pattern": re.compile(
-         r"(?:(?:build|write|make|create)\s+)?(?:me\s+)?an?\s+(?:\w+\s+)?(script|function|program)"
-         r"(?:\s+(?:called|named)\s+(\S+))?\s+(?:that|to|which)\s+(.+)", re.I),
-     "build": _build_forge_build,
-     "example": "a script that prints hello world"},
 
     {"name": "sandbox_run_python", "organ": "sandbox", "method": "POST",
      "pattern": re.compile(r"run this python(?: code)?:\s*(.+)", re.I | re.S),

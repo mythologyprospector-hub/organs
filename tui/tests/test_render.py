@@ -28,7 +28,7 @@ class FakeWindow:
 HEALTHY_DATA = {
     "registry": {"organs": [
         {"name": "memory", "status": "alive", "last_heartbeat_age_seconds": 2.1, "version": "0.3.0"},
-        {"name": "forge", "status": "alive", "last_heartbeat_age_seconds": 400, "version": "0.1.0"},
+        {"name": "sandbox", "status": "alive", "last_heartbeat_age_seconds": 400, "version": "0.1.0"},
     ]},
     "memory": {"ledger_entries": 12, "indexed_entries": 12, "unembedded": 0, "archived_entries": 1,
                "pinned_entries": 2, "active_scars": 0, "pending_promises": 1, "open_unknowables": 0,
@@ -38,12 +38,6 @@ HEALTHY_DATA = {
         "cpu": {"cores": 16, "load_1m": 0.42},
         "memory": {"used_gb": 8.2, "total_gb": 32.0},
     },
-    "forge_jobs": [
-        {"job_id": "abc123", "language": "python", "files": ["solution.py", "test_solution.py"],
-         "test_command": "pytest -q", "sandbox_result": {"exit_code": 0}, "created": 1000.0, "deleted": False},
-        {"job_id": "def456", "language": "python", "files": ["solution.py"],
-         "test_command": None, "sandbox_result": None, "created": 900.0, "deleted": False},
-    ],
     "telemetry_stats": {"total_events": 3, "by_source": {"memory": 2, "sandbox": 1}, "avg_duration_ms": 42.5},
     "telemetry_recent": [
         {"timestamp": 1000.0, "source": "memory", "event_type": "request", "status": "completed"},
@@ -64,7 +58,6 @@ EMPTY_DATA = {
     "registry": {"organs": []},
     "memory": {},
     "introspection": {"host": {}, "cpu": {}, "memory": {}},
-    "forge_jobs": [],
     "telemetry_stats": {},
     "telemetry_recent": [],
     "executive_goals": [],
@@ -92,7 +85,7 @@ def test_tab_bar_highlights_current_tab():
     win = FakeWindow()
     ui.draw_tab_bar(win, 2)
     rendered = " ".join(text for _, _, text in win.lines)
-    assert "Forge" in rendered
+    assert "Sandbox" in rendered
 
 
 def test_safe_addstr_never_raises_when_off_screen():
@@ -121,34 +114,20 @@ def test_safe_addstr_survives_curses_error(monkeypatch):
     ui._safe_addstr(win, 0, 0, "text")  # must not raise even if addstr itself does
 
 
-def test_forge_panel_distinguishes_tested_from_untested_jobs():
-    """Regression test for a real bug caught live on mythos1: this
-    panel's TESTS column showed '-' for every job, even ones that
-    genuinely had test_command set, because the old logic keyed off
-    job.get('test_command') — a field GET /forge/jobs never actually
-    included. Asserts the real rendered text, not just 'didn't crash',
-    since that's exactly the class of bug a not-crashed assertion
-    wouldn't have caught."""
+def test_sandbox_panel_reports_diagnostics():
     win = FakeWindow()
-    ui.draw_forge(win, HEALTHY_DATA)
-    full_text = "\n".join(t for _, _, t in win.lines)
-    assert "abc123" in full_text and "passed" in full_text
-    assert "def456" in full_text
-    # def456 has no sandbox_result — its row must show '-', not 'passed'
-    # or 'exit None'. Check the specific row's text, not just presence
-    # anywhere on screen.
-    def456_line = next(t for _, _, t in win.lines if "def456" in t)
-    assert "-" in def456_line
-    assert "passed" not in def456_line
-    abc123_line = next(t for _, _, t in win.lines if "abc123" in t)
-    assert "passed" in abc123_line
-
-
-def test_forge_panel_shows_no_jobs_message_when_empty():
-    win = FakeWindow()
-    ui.draw_forge(win, EMPTY_DATA)
+    ui.draw_sandbox(win, HEALTHY_DATA)
     rendered = " ".join(text for _, _, text in win.lines)
-    assert "no jobs yet" in rendered
+    assert "SANDBOX" in rendered
+    assert "docker_available" in rendered
+    assert "True" in rendered
+
+
+def test_sandbox_panel_shows_no_diagnostic_message_when_empty():
+    win = FakeWindow()
+    ui.draw_sandbox(win, EMPTY_DATA)
+    rendered = " ".join(text for _, _, text in win.lines)
+    assert "no diagnostic data" in rendered
 
 
 def test_telemetry_panel_explains_empty_state_honestly():
@@ -346,7 +325,7 @@ SAMPLE_GOALS = [
          "risk_reasoning": "read-only", "status": "succeeded"},
     ]},
     {"id": "goal2", "description": "a script that prints hello world", "status": "blocked", "steps": [
-        {"id": "step3", "organ": "forge", "method": "POST", "path": "/forge/build",
+        {"id": "step3", "organ": "sandbox", "method": "POST", "path": "/sandbox/jobs",
          "body": {"spec": "prints hello world"}, "description": "generate script", "risk_tier": "high_risk",
          "risk_reasoning": "code generation", "status": "pending_approval"},
     ]},
@@ -391,7 +370,7 @@ def test_draw_executive_shows_pending_queue_and_keybindings():
     rendered = " ".join(t for _, _, t in win.lines)
     assert "approve" in rendered and "reject" in rendered and "execute" in rendered
     assert "orchestrator" in rendered
-    assert "forge" in rendered
+    assert "sandbox" in rendered
     assert exec_state["items"] == ui._queue_items(SAMPLE_GOALS)
 
 

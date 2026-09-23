@@ -1,5 +1,5 @@
 #!/bin/bash
-# install_systemd.sh — wires all eleven organs in as user-scope systemd
+# install_systemd.sh — wires all eleven runtime organs in as user-scope systemd
 # services, same pattern akasha-oracle already used on this machine.
 #
 # Run this FROM WHEREVER YOU EXTRACTED THE TARBALL, after /srv/organs
@@ -30,7 +30,6 @@ cp "$SRC_DIR/organs-sandbox.service" "$UNIT_DIR/"
 cp "$SRC_DIR/organs-critic.service" "$UNIT_DIR/"
 cp "$SRC_DIR/organs-executive.service" "$UNIT_DIR/"
 cp "$SRC_DIR/organs-io-interface.service" "$UNIT_DIR/"
-cp "$SRC_DIR/organs-forge.service" "$UNIT_DIR/"
 cp "$SRC_DIR/organs-telemetry.service" "$UNIT_DIR/"
 echo "-> copied to $UNIT_DIR"
 
@@ -52,7 +51,6 @@ systemctl --user enable organs-sandbox.service
 systemctl --user enable organs-critic.service
 systemctl --user enable organs-executive.service
 systemctl --user enable organs-io-interface.service
-systemctl --user enable organs-forge.service
 systemctl --user enable organs-telemetry.service
 
 echo
@@ -70,8 +68,6 @@ sleep 1
 systemctl --user start organs-executive.service
 sleep 1
 systemctl --user start organs-io-interface.service
-sleep 1
-systemctl --user start organs-forge.service
 sleep 1
 systemctl --user start organs-telemetry.service
 sleep 2
@@ -97,8 +93,6 @@ echo
 systemctl --user status organs-executive.service --no-pager -l | head -8
 echo
 systemctl --user status organs-io-interface.service --no-pager -l | head -8
-echo
-systemctl --user status organs-forge.service --no-pager -l | head -8
 echo
 systemctl --user status organs-telemetry.service --no-pager -l | head -8
 
@@ -132,12 +126,6 @@ echo "  curl -X POST localhost:8009/io/handle -H 'content-type: application/json
 echo "See the whole catalog it understands:"
 echo "  curl localhost:8009/io/catalog"
 echo
-echo "Forge generates code via a REAL Ollama call — no sim, no stub. Check"
-echo "it can actually reach Ollama with:"
-echo "  curl localhost:8010/health"
-echo "Try it (this makes a real generation call, may take a few seconds):"
-echo "  curl -X POST localhost:8010/forge/build -H 'content-type: application/json' \"
-echo "    -d '{\"spec\":\"a function that returns the sum of two numbers\",\"language\":\"python\",\"filename\":\"solution.py\"}'"
 echo
 echo "Telemetry is the observation layer — see what it knows so far:"
 echo "  curl localhost:8011/telemetry/stats"
@@ -146,7 +134,7 @@ echo "Nothing calls it yet — instrumenting the other organs to emit events"
 echo "is the next real step, not done automatically by this script."
 echo
 echo "Useful commands going forward:"
-echo "  systemctl --user status organs-memory organs-communications organs-orchestrator organs-reflection organs-introspection organs-sandbox organs-critic organs-executive organs-io-interface organs-forge organs-telemetry"
+echo "  systemctl --user status organs-memory organs-communications organs-orchestrator organs-reflection organs-introspection organs-sandbox organs-critic organs-executive organs-io-interface organs-telemetry"
 echo "  systemctl --user restart organs-memory"
 echo "  journalctl --user -u organs-memory -f      # live logs"
 echo "  journalctl --user -u organs-communications -f"
@@ -157,7 +145,7 @@ echo "  journalctl --user -u organs-sandbox -f"
 echo "  journalctl --user -u organs-critic -f"
 echo "  journalctl --user -u organs-executive -f"
 echo "  journalctl --user -u organs-io-interface -f"
-echo "  journalctl --user -u organs-forge -f"
+echo "  journalctl --user -u -f"
 echo "  journalctl --user -u organs-telemetry -f"
 echo "  journalctl --user -u organs-registry -f"
 echo

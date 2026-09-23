@@ -49,7 +49,7 @@ def _post(url: str, body: dict, timeout: float = None):
     """Real POST, JSON in, JSON out. Never raises. An HTTPError (e.g. a
     400 from a malformed request) still carries the target organ's own
     structured error envelope in its body — surface that instead of
-    just the HTTP status, same instinct as Forge's _run_sandbox_call."""
+    just the HTTP status, using the same structured-error discipline as every Organs call."""
     try:
         payload = json.dumps(body).encode("utf-8")
         req = urllib.request.Request(
@@ -139,7 +139,7 @@ def send_executive_reject(base_url: str, goal_id: str, step_id: str, reason: str
 
 def send_executive_execute_next(base_url: str, goal_id: str):
     """Runs exactly one already-approved step — the actual call to the
-    target organ (Forge, Orchestrator, whatever the step names), not
+    target organ named by the approved Executive step, not
     just a status flip like approve/reject are. Same
     /executive/goals/{goal_id}/execute_next a curl call would hit;
     Executive itself decides whether there's anything left to run and
@@ -161,7 +161,6 @@ def fetch_all(registry_url: str = None) -> dict:
         "registry": registry,
         "memory": _fetch_from(base_urls, "memory", "/memory/stats"),
         "introspection": _fetch_from(base_urls, "introspection", "/introspect/summary"),
-        "forge_jobs": _fetch_from(base_urls, "forge", "/forge/jobs"),
         "telemetry_stats": _fetch_from(base_urls, "telemetry", "/telemetry/stats"),
         "telemetry_recent": _fetch_from(base_urls, "telemetry", "/telemetry/recent?limit=15"),
         "executive_goals": _fetch_from(base_urls, "executive", "/executive/goals"),
@@ -194,7 +193,6 @@ def fetch_live_checks(registry_snapshot: dict) -> list[dict]:
         ("critic", "rules", "/critic/rules"),
         ("executive", "goals", "/executive/goals"),
         ("io_interface", "catalog", "/io/catalog"),
-        ("forge", "jobs", "/forge/jobs"),
         ("telemetry", "stats", "/telemetry/stats"),
     ]
     out = []

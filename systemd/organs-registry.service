@@ -7,7 +7,7 @@ Type=simple
 WorkingDirectory=/srv/organs/registry
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/srv/organs/registry/registry.env
-ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8000
 Restart=on-failure
 RestartSec=3
 

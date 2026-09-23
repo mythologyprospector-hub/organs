@@ -85,18 +85,18 @@ def test_fetch_all_populates_every_organ_from_registry(td, monkeypatch):
         "http://registry.test/registry/organs": [
             {"name": "memory", "base_url": "http://mem"},
             {"name": "telemetry", "base_url": "http://tel"},
-            {"name": "forge", "base_url": "http://forge"},
+            {"name": "sandbox", "base_url": "http://sbx"},
         ],
         "http://mem/memory/stats": {"entries": 42},
         "http://tel/telemetry/stats": {"total_events": 3},
         "http://tel/telemetry/recent": [{"event_id": "abc"}],
-        "http://forge/forge/jobs": [{"job_id": "xyz"}],
+        "http://sbx/sandbox/doctor": {"docker_available": True},
     }))
     data = td.fetch_all()
     assert data["memory"] == {"entries": 42}
     assert data["telemetry_stats"] == {"total_events": 3}
     assert data["telemetry_recent"] == [{"event_id": "abc"}]
-    assert data["forge_jobs"] == [{"job_id": "xyz"}]
+    assert data["sandbox_doctor"] == {"docker_available": True}
 
 
 def test_fetch_all_degrades_cleanly_when_registry_unreachable(td, monkeypatch):
@@ -110,7 +110,7 @@ def test_fetch_all_degrades_cleanly_when_registry_unreachable(td, monkeypatch):
     assert td.is_error(data["registry"])
     assert td.is_error(data["memory"])
     assert "not currently registered" in data["memory"]["error"]
-    assert td.is_error(data["forge_jobs"])
+    assert td.is_error(data["sandbox_doctor"])
 
 
 def test_fetch_all_degrades_per_organ_not_globally(td, monkeypatch):
@@ -139,8 +139,7 @@ def test_fetch_all_missing_organ_from_registry_is_a_clean_error(td, monkeypatch)
         "http://registry.test/registry/organs": [],
     }))
     data = td.fetch_all()
-    assert td.is_error(data["forge_jobs"])
-    assert "not currently registered" in data["forge_jobs"]["error"]
+    assert td.is_error(data["sandbox_doctor"])\n    assert "not currently registered" in data["sandbox_doctor"]["error"]
 
 
 @pytest.mark.parametrize("seconds,expected_substring", [
@@ -333,7 +332,6 @@ def test_fetch_live_checks_uses_only_existing_read_endpoints(td, monkeypatch):
             {"name": "critic", "base_url": "http://critic"},
             {"name": "executive", "base_url": "http://exec"},
             {"name": "io_interface", "base_url": "http://io"},
-            {"name": "forge", "base_url": "http://forge"},
             {"name": "telemetry", "base_url": "http://tel"},
         ],
         "http://mem/health": {"status": "ok"},
@@ -345,18 +343,17 @@ def test_fetch_live_checks_uses_only_existing_read_endpoints(td, monkeypatch):
         "http://critic/critic/rules": [],
         "http://exec/executive/goals": [],
         "http://io/io/catalog": [],
-        "http://forge/forge/jobs": [],
         "http://tel/telemetry/stats": {"total_events": 0},
     }
     monkeypatch.setattr(td.urllib.request, "urlopen", _fake_urlopen(routes))
     registry = td.fetch_registry()
     checks = td.fetch_live_checks(registry)
-    assert len(checks) == 12
+    assert len(checks) == 11
     assert all(check["ok"] for check in checks)
     assert {check["organ"] for check in checks} == {
         "registry", "memory", "communications", "orchestrator", "reflection",
         "introspection", "sandbox", "critic", "executive", "io_interface",
-        "forge", "telemetry",
+        "telemetry",
     }
 
 

@@ -8,7 +8,7 @@ Type=simple
 WorkingDirectory=/srv/organs/introspection
 Environment=PYTHONUNBUFFERED=1
 EnvironmentFile=-/srv/organs/introspection/introspection.env
-ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8005
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8005
 Restart=on-failure
 RestartSec=3
 
