@@ -86,7 +86,6 @@ The current set includes:
 - Telemetry
 - I/O Interface
 - TUI
-- Sensei, as an optional operator/developer aid
 
 Forge was deliberately removed and is not part of the architecture.
 
