@@ -50,7 +50,6 @@ decide what Renaissance is.**
 | Telemetry | append-oriented operational observation |
 | I/O Interface | deterministic human-facing request routing |
 | TUI | human-facing inspection and operation |
-| Sensei | optional local operator/developer assistance |
 
 ## Authority boundaries
 
@@ -70,12 +69,11 @@ Organs contains mechanisms, not sovereignty.
 - Reflection may suggest or record; it does not grant itself authority.
 - I/O Interface translates within a fixed catalog; it does not invent
   capabilities.
-- TUI/Sensei expose human interaction; neither becomes a hidden authority.
+- TUI exposes human interaction; it does not become a hidden authority.
 
 ## Domain boundary
 
-Renaissance domain capabilities such as Episteme, Provenance, Atlas, Unknowns,
-Experimentalist, Referee, and Rosetta should remain independently defined.
+Renaissance domain capabilities should remain independently defined.
 
 They may consume Organs services through explicit interfaces.
 
