@@ -42,7 +42,6 @@ application.
 ### Operator tools
 
 - **TUI** — live terminal dashboard and human control surface.
-- **Sensei** — optional local operator/developer assistance.
 
 These tools consume Organs; they are not additional authority layers.
 
