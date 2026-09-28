@@ -714,11 +714,10 @@ Canon/API/Dev Note specifies which organ should consume which Memory topic.
 No subscriber has been invented in this pass. That is an explicit **ASK** item,
 not a missing feature to guess at.
 
-The next technically grounded tightening is correlation propagation through
-existing organ-to-organ HTTP calls. That is already promised by Telemetry's
-`correlation_id`/timeline model, but the existing callers do not consistently
-forward the originating ID. No new organ or new architectural channel is needed
-for that work.
+The next technically grounded tightening identified here was correlation
+propagation through existing organ-to-organ HTTP calls. That work is now
+complete and is recorded in the section below. No new organ or new
+architectural channel was needed.
 
 ### Correlation propagation through the existing HTTP spine
 
