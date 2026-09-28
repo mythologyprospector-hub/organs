@@ -142,14 +142,12 @@ path doesn't apply here" can itself have more than one shape — don't
 assume the one unhappy path your own environment reproduces is the only
 one that exists.
 
-**Known open gap, not yet fixed:** Orchestrator shells out to
-`systemctl`/`docker inspect` — the same class of external-truth
-reporting as Sandbox — but every one of its 41 tests goes through
-`fake_runner`; there is currently no test anywhere in `orchestrator/
-tests/` that calls the real, unmocked `_run()`. By this section's own
-rule, Orchestrator hasn't actually cleared the bar yet. Flagged, not
-fixed — next time Orchestrator gets touched, add a live test mirroring
-Sandbox's, before adding anything else.
+**Orchestrator has cleared this gap:** its suite now includes a live,
+unmocked `_run()` regression test against a real external dependency.
+The test accepts both valid environmental states — Docker available or
+absent — and verifies that the real subprocess path reports the state
+without an unhandled exception. This keeps the standing rule above
+current rather than leaving a completed testing gap documented as open.
 
 For organs that make multi-step or externally-effecting calls (Reflection,
 Executive, I/O Interface), the standing pattern is **dependency injection**:
