@@ -5,7 +5,8 @@
 # It figures out its own location, so the source path does not matter.
 #
 # Runtime data under /srv/organs/*/data is intentionally preserved by this
-# overlay model. Retired components are removed explicitly and narrowly.
+# overlay model. Existing component directories are not removed by this
+# script; retirement cleanup, when authorized, must be explicit and narrow.
 #
 # This script does not install or modify systemd units.
 
