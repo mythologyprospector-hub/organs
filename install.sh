@@ -31,9 +31,6 @@ for organ in shared registry memory communications orchestrator reflection intro
     sudo cp -r "$SRC_DIR/$organ" "$DEST/"
 done
 
-echo "-> Removing retired Sensei runtime tree, if present"
-sudo rm -rf "$DEST/sensei"
-
 echo "-> Copying current canonical project docs and test tooling"
 for f in README.md CANON.md ARCHITECTURE.md CONTRIBUTING.md DEV_NOTES.md SECURITY.md MAXIMIZATION_PASS.md REPO_MIGRATION.md run_all_tests.sh pytest.ini requirements.txt; do
     if [ -f "$SRC_DIR/$f" ]; then
@@ -61,7 +58,7 @@ echo
 echo "== Install complete =="
 echo "The installed runtime is on disk at $DEST."
 echo "Existing runtime data was preserved."
-echo "Retired Sensei runtime files were removed."
+echo "Current Organs runtime files are installed."
 echo
 
 RUNNING_ORGANS=()

@@ -27,7 +27,7 @@ ORGANS=(registry memory communications orchestrator reflection introspection san
 # same subprocess-isolated test treatment for the same reason (its own
 # fixtures reload tui_data.py fresh, same "no shared venv" principle),
 # but it's kept in its own list so this script never calls it an organ.
-TOOLS=(tui sensei)
+TOOLS=(tui)
 
 total_pass=0
 total_fail=0

@@ -4,9 +4,8 @@
 #
 # Run this after install.sh has successfully updated /srv/organs.
 #
-# It removes the retired Sensei service, reloads systemd, enables the current
-# eleven services, restarts them in dependency-sensitive order, and verifies
-# Registry discovery.
+# It reloads systemd, enables the current eleven services, restarts them in
+# dependency-sensitive order, and verifies Registry discovery.
 
 set -euo pipefail
 
@@ -21,11 +20,6 @@ for unit in organs-registry.service organs-memory.service organs-communications.
 done
 
 echo "-> copied current eleven units to $UNIT_DIR"
-
-echo
-echo "== Removing retired Sensei service =="
-systemctl --user disable --now organs-sensei.service 2>/dev/null || true
-rm -f "$UNIT_DIR/organs-sensei.service"
 
 echo
 echo "== Enabling linger for $USER =="
