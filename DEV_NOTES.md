@@ -723,8 +723,8 @@ architectural channel was needed.
 
 The shared HTTP convention now keeps the incoming `X-Correlation-ID` in a
 request-scoped context while an organ endpoint is executing. Existing
-inter-organ HTTP calls in Executive, I/O Interface, Memory, Reflection, and
-Forge forward that same ID; Registry discovery also forwards it automatically.
+inter-organ HTTP calls in Executive, I/O Interface, Memory, and Reflection
+forward that same ID; Registry discovery also forwards it automatically.
 Background heartbeat work remains uncorrelated, as it was before, because it
 has no originating request.
 
