@@ -89,6 +89,8 @@ def test_executive_live_chain_registry_critic_target(monkeypatch, tmp_path):
             f"http://127.0.0.1:{server.server_port}",
         )
         import importlib
+        import organ_client
+        importlib.reload(organ_client)
         import executive_core
         importlib.reload(executive_core)
         import main
