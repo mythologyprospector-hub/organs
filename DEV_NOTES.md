@@ -139,13 +139,6 @@ precision that was never actually being claimed.
 
 ## Memory (first organ built to completion, v0.3.0)
 
-Proof the "build to completion" rule holds — GOAL.md's original question
-set turned into fields on existing records rather than 21 separate
-subsystems. Layers: ledger (permanent) → entries (searchable, salience-
-scored) → archived (forgetting ≠ deletion) → facts/scars (propose →
-decide → canon) → promises/unknowable/relations (structured state, one
-edge table connects any two record kinds).
-
 Worth being precise about that last group: promises and relations resolve
 through a single `op_resolve_promise`/`op_resolve_relation` call, not a
 separate propose-then-decide *pair* the way facts and scars actually have
@@ -244,12 +237,6 @@ wins, and the *last* rule is always "anything unrecognized →
 `high_risk`" — the fail-closed default isn't a fallback bolted on, it's
 structurally the final line of the table. Stateless: every call is
 independent, evaluates only what's *about* to happen, never sees history.
-
-If you add a new organ or endpoint that Executive or I/O Interface should
-be able to call, **it needs a rule added here explicitly** — otherwise it
-silently falls through to `high_risk`, which is safe-by-default but will
-be confusing if you forget this step and wonder why a new safe action
-keeps demanding approval.
 
 ## Executive (v0.1.0) — undocumented until this pass
 
@@ -363,69 +350,6 @@ specific state. Verified both branches: real environment here (Docker
 absent, rc 127) and a faked working `docker` binary (rc 0). 302 passing
 either way.
 
-**Update, eleventh organ — Forge:** built as a direct, single-shot HTTP
-organ (spec in, code out, optionally validated against the real
-Sandbox) rather than the fuller telemetry/context-broker-backed
-pipeline a later external roadmap review sketched — that review's own
-stated development order puts Telemetry, State, and a Context Broker
-ahead of Code Forge, for the same reason akasha-llm-orchestrator and
-akasha-forge were judged to have failed: a model coding "blind," with
-no observation layer and everything held in its own context. Building
-Forge now, before that foundation exists, is a known, named deviation
-from that review's advice — not an oversight. Whether that foundation
-still gets built is an open decision, not a settled one.
-
-Two external dependencies, two different existing conventions, matched
-deliberately: Ollama is a raw network dependency, so `ollama_generate`
-follows Memory's pattern (top-level function in `forge_core.py`, faked
-directly in tests, real in main.py, always). Sandbox is another organ,
-so validating generated code follows Executive's pattern instead —
-`run_sandbox_call` injected into `op_build()`, real implementation
-(`discover("sandbox")` + the actual call) living in `main.py`. Picking
-one pattern for both would have been simpler and would have been wrong
-— they're genuinely different kinds of dependency.
-
-Forge's workspace is deliberately PERSISTENT, the one place this organ
-inverts Sandbox's own convention on purpose. Sandbox's docstring already
-named Forge as the reason it exists ("the piece the future code forge
-needs to actually execute what it writes") and destroys its workspace
-after every job because Sandbox's output is disposable. Forge's output
-*is* the deliverable — nothing here auto-deletes it; `DELETE
-/forge/jobs/{id}` is a human decision, same hard-veto spine as
-gapforge/pipeline_guard/the gig intake pipeline. No commit, merge,
-publish, or deploy verb exists anywhere in this organ.
-
-Shipped with the same test-discipline item that got Sandbox bitten
-twice and flagged Orchestrator as still missing one: one test
-(`test_real_ollama_generate_survives_whatever_this_environment_has`)
-calls the real, unmocked `ollama_generate` against whatever's actually
-on the machine — a clean `ForgeError` here (no Ollama in this repo's
-CI), real generated text on Bucky. 27 new tests, 329 passing across all
-eleven organs.
-
-**Update, twelfth organ — Telemetry, and the actual build-order call:**
-Jimmy specifically wanted Telemetry and Temporal reasoning (and, this
-same pass, a TUI) — none of which were on record here before a
-ChatGPT-authored roadmap review surfaced them by name. Its own stated
-development order put seven other things ahead of Forge, including
-Telemetry; Forge got built first anyway, as a deliberate, named
-deviation (see the Forge entry above). Jimmy then made explicit that
-the roadmap doc was shown for the organ ideas it contained, not its
-ordering, and handed build-order judgment to Claude as builder, second
-call after his own.
-
-Call made: **Telemetry, then TUI, then Temporal, one at a time.**
-Reasoning — Telemetry has no dependencies of its own, so it's free to
-build now. TUI needs real events to show; building it before Telemetry
-existed would mean either faking a "recent activity" view or shipping
-an empty one, directly undoing the no-sim/no-stub discipline Forge was
-just built under. Temporal is the biggest and riskiest of the three —
-it's not a new organ, it's reopening Memory, which is finished,
-versioned, and has 66 tests already depending on its current schema —
-and reasoning about time is more grounded with a real event timeline
-to anchor "before/after/caused" relations to than designed in the
-abstract first.
-
 Storage deliberately mirrors Memory's own jsonl+sqlite pattern rather
 than inventing a new one — permanent append-only `telemetry.jsonl`,
 queryable `telemetry.sqlite3` index. Every event carries two clocks on
@@ -446,91 +370,12 @@ deliberately not done in this same pass (touching eleven already-
 finished organs' main.py files is its own project, not a drive-by).
 29 new tests, 358 passing across all twelve organs.
 
-**Update, first real Forge run on mythos1 — caught live, on the first
-try:** the organ's own live-Ollama test is exactly what it was built to
-be. Ollama was reached (connection succeeded, mythos1 does have it
-running) but generation didn't finish inside the test's 5s timeout —
-almost certainly a cold model load, the first call after Ollama starts
-or after the model's been idle. `ollama_generate` only caught
-`urllib.error.URLError`, which wraps CONNECT-phase failures; a timeout
-while reading the response is a raw `TimeoutError` outside that
-wrapping entirely, and escaped uncaught — the exact "raw exception,
-not a clean ForgeError" outcome the test's own docstring says is the
-one unacceptable result. Fixed by catching `OSError` broadly (`URLError`
-is itself an `OSError` subclass, so this is strictly broader) with a
-message that distinguishes "couldn't reach it" from "reached it, too
-slow" — the second one now suggests retrying or raising
-`FORGE_GENERATE_TIMEOUT`, since that's actually actionable and
-"connection refused" isn't the right advice for a slow-but-working
-server. Test timeout bumped from 5s to 20s to give a real cold-start
-call a fair chance without leaving CI hanging when Ollama's genuinely
-absent (that path still fails in milliseconds regardless of the timeout
-value). Added a synthetic slow-server test as a permanent regression
-test, rather than depending on a live Ollama being slow to catch this
-again. Logged as the 5th documented instance of CONTRIBUTING.md's
-"mock diverges from reality" bug class — 359 passing across all twelve
-organs.
-
-**Update, same first real Forge run — a second, quieter bug found in
-the same response:** the generated test file never imported
-`solution.py`. It redefined its own copy of the target function under a
-different name and tested that instead — a green test suite (had
-pytest been installed) that would have validated nothing about the
-real deliverable. Root cause: `op_build` made two INDEPENDENT
-`ollama_generate` calls — implementation, then tests — each derived
-only from English spec text, with zero coordination between them. The
-model writing the test genuinely had no way to know what the real
-implementation ended up being named. Fixed by including the actual
-generated `impl_code` in the test-generation prompt, with an explicit
-instruction not to reimplement or redefine anything from it. Verified
-with a test that captures the real prompt text sent to the second
-`ollama_generate` call and asserts the first call's real output
-actually appears inside it — proving the coordination happened, not
-just that both calls were made.
-
 Also added `network` (default `False`, matching Sandbox's own default)
 end to end — `BuildRequest` → `op_build` → `run_sandbox_call` → the
 real Sandbox HTTP call — since the base test images have no test
 framework preinstalled and there was previously no way to opt a build
 into `pip install`-ing one. Never auto-enabled; an explicit per-build
 choice, same hard-veto discipline as everything else in this organ.
-
-Neither of these was a "mock diverges from reality" bug in
-CONTRIBUTING.md's specific sense — there's no fake standing in for
-Ollama here, both calls were real. It's a different, related failure:
-two real, independent calls to the same real dependency, silently
-diverging from EACH OTHER for lack of any shared context. Worth its own
-line rather than folding it into that list under a label that doesn't
-quite fit. 30 tests in forge now (was 27), 361 passing across all
-twelve organs.
-
-**Update, the real reason the last two "fixes" looked like they didn't
-work:** they did — `forge_core.py` on disk had both fixes the whole
-time. `install.sh` copies files and runs tests; it never restarts an
-already-running systemd service. `organs-forge` was already running on
-mythos1 from the earlier `install_systemd.sh` pass, so uvicorn kept
-executing whatever it had loaded into memory at its last start — file
-changes on disk are invisible to a running Python process until it
-restarts. Confirmed by the exact symptom repeating identically across
-two "reinstalls": same `sum_numbers`, same `network_enabled: false`,
-because it was never re-running the new code at all, just re-serving
-the same old process.
-
-`install.sh` now detects this instead of leaving it a silent trap:
-after copying files and running tests, it checks `systemctl --user
-is-active` for all twelve organ services and — only for the ones
-actually running — prints the exact `systemctl --user restart ...`
-command needed, right after "Done", before any other hint text.
-Verified both ways: with organs-forge/organs-telemetry reported as
-active (prints the exact restart line, correct names) and with nothing
-running (prints nothing, no false-positive noise on a first-time
-install where systemd isn't set up yet).
-
-**Update, TUI — the first tool, not organ, in this repo:** landed after
-Telemetry per the build order named in the Forge/Telemetry entries
-above. Deliberately NOT organ #13 — it provides no HTTP capability,
-nothing calls it, and it doesn't register with the Registry. It's the
-first thing in this whole system that only consumes.
 
 Same core-vs-thin-interface split every organ already has, applied to a
 client for the first time: `tui_data.py` makes every real HTTP call
@@ -565,38 +410,6 @@ distinction is real, not pedantic, and the script's own job is to be
 accurate about what it's running. 44 new tests, 405 passing across all
 twelve organs and one tool.
 
-Named right after this: Jimmy noted "Organs" is straining as a name now
-that it covers a code forge, an observation layer, and a terminal
-dashboard, not just ten small HTTP services. Open, not yet decided —
-flagged here so it isn't lost, not treated as blocking anything above.
-
-**Update, first real TUI session on mythos1 — caught a real bug in the
-TUI itself, on the Forge tab:** every job's TESTS column showed `-`,
-even for jobs that genuinely had `test_command` set (the pytest-not-
-installed and pytest-actually-passed runs from Forge's own first real
-session). Root cause: `draw_forge` checked `job.get("test_command")` —
-a field `GET /forge/jobs` never actually included. `op_list_jobs`
-returns a fixed projection of each ledger entry (`job_id, created,
-language, model, files, deleted, sandbox_result`), and `test_command`
-was never in that list — only the single-job detail endpoint
-(`op_get_job`) carries the full manifest. This is exactly the kind of
-gap the "confirm exact real route paths before writing a single panel"
-step earlier in this file was meant to catch, and didn't — checking the
-route existed wasn't the same as checking every field a panel reads
-actually appears in that route's real response shape.
-
-Fixed on both ends: `op_list_jobs` now includes `test_command` too (a
-real, small API completeness fix — a plain `curl /forge/jobs` was
-missing the same information), and `draw_forge` was changed to key off
-`sandbox_result` being present rather than `test_command`, since that's
-the more direct signal for "were tests actually attempted" and doesn't
-depend on which fields a future summary projection happens to include.
-Added a render test that checks the actual rendered TEXT per row (not
-just "didn't crash") — `abc123`'s row must contain "passed", `def456`'s
-row must contain "-" and must NOT contain "passed", proving the
-distinction the original bug silently erased. 407 passing across all
-twelve organs and the tool.
-
 **Update, TUI's Input tab — the first side-effecting panel:** everything
 else in the TUI is read-only; this one can act. Wired straight to the
 real I/O Interface organ's existing `/io/handle` (plain text) and
@@ -622,41 +435,6 @@ every real response shape `/io/handle`/`/io/interpret` actually
 produce (matched-and-executed, matched-and-gated, unmatched, error),
 not invented ones.
 
-**Update, a real and serious bug — the `main.py` collision, confirmed
-live, not theoretical:** `pytest.ini` already carried
-`--import-mode=importlib`, added for a DIFFERENT collision (pytest's
-own test-file identification, e.g. `memory/tests/test_api.py` vs
-`orchestrator/tests/test_api.py` both wanting to register as module
-`test_api`). Its own comment already said what it didn't cover: each
-organ's `conftest.py` does a plain `import main` — ordinary Python
-import machinery, untouched by pytest's import-mode setting. Reproduced
-directly: `pytest memory/tests/test_api.py forge/tests/test_api.py` in
-one process produces ten of memory's tests failing with 404s and
-KeyErrors — not because anything is broken, but because memory's
-fixtures ran against forge's already-imported app. Worse than a crash:
-looks exactly like a real bug, sends whoever hits it chasing the wrong
-thing — which is exactly what happened before this got traced back
-here. The existing `importlib.reload(main)` calls scattered across
-several conftest.py files don't protect against this either — reload()
-re-executes the CACHED module using its ORIGINAL file location, not
-whichever organ is currently trying to import it.
-
-Fixed with a root-level `conftest.py` — a deliberate tripwire, the only
-file in this repo whose entire job is to refuse to run. Its
-`pytest_collection_modifyitems` hook inspects what was actually
-collected and, if it spans more than one organ/tool directory, calls
-`pytest.exit()` before a single test executes — "no tests ran," not ten
-confusing failures. Verified four ways: the exact scenario that broke
-(`pytest memory/tests/... forge/tests/...`) now refuses immediately;
-bare `pytest` from the repo root (collects all 427 items across twelve
-organs and the tui tool) also refuses immediately, listing every organ
-involved; every legitimate invocation — a single organ from the root
-(`pytest memory/tests/`), `cd`'d into one organ (what
-`run_all_tests.sh` actually does), and the `tui` tool on its own — all
-still pass clean, same counts as before. `run_all_tests.sh` itself
-re-verified end to end afterward: still exactly 427 passing, nothing
-about legitimate usage changed.
-
 **Update, a milestone, not a bug fix:** with this edit landed, Jimmy
 called a temporary feature freeze — twelve organs and one tool is
 "where he wants it" as a core. Next phase is explicitly integration and
@@ -672,7 +450,6 @@ probably the rename this file already flagged, since "Organs" was
 already straining before this phase even started. Recorded here so the
 next session opens knowing this is the current mandate, not "what
 organ should I build next."
-
 
 **Update, first organism-integration pass — Telemetry is now actually in the bloodstream:**
 
@@ -714,20 +491,12 @@ Canon/API/Dev Note specifies which organ should consume which Memory topic.
 No subscriber has been invented in this pass. That is an explicit **ASK** item,
 not a missing feature to guess at.
 
-The next technically grounded tightening is correlation propagation through
-existing organ-to-organ HTTP calls. That is already promised by Telemetry's
-`correlation_id`/timeline model, but the existing callers do not consistently
-forward the originating ID. No new organ or new architectural channel is needed
-for that work.
+The next technically grounded tightening identified here was correlation
+propagation through existing organ-to-organ HTTP calls. That work is now
+complete and is recorded in the section below. No new organ or new
+architectural channel was needed.
 
 ### Correlation propagation through the existing HTTP spine
-
-The shared HTTP convention now keeps the incoming `X-Correlation-ID` in a
-request-scoped context while an organ endpoint is executing. Existing
-inter-organ HTTP calls in Executive, I/O Interface, Memory, Reflection, and
-Forge forward that same ID; Registry discovery also forwards it automatically.
-Background heartbeat work remains uncorrelated, as it was before, because it
-has no originating request.
 
 This is wiring, not a new message or API feature: no endpoint shapes, bus
 semantics, discovery behavior, or retry policy changed. The small
@@ -738,158 +507,3 @@ Two shared integration tests prove the actual HTTP behavior: an existing
 organ-style outbound request receives the caller's correlation ID, and a
 Registry discovery made inside an organ request receives it too. The full
 isolated test harness passed after the change.
-
-**Update, first real cross-organ integration tests — the gap named above:**
-
-The feature-freeze note above named "cross-organ integration tests (something
-no test suite here currently does)" as part of the integration mandate. That
-gap is now closed with a new top-level `live_integration/` directory — not an
-organ, not a tool, deliberately excluded from `run_all_tests.sh`'s per-organ
-loop and from the root `conftest.py` tripwire's concern, because unlike every
-existing suite it imports nothing by bare module name from any organ. It only
-ever calls organs over real HTTP, the same way a human or another organ would.
-
-Its `conftest.py` boots Registry, Critic, Memory, Communications, and Sensei
-as five real `uvicorn` subprocesses on dedicated ports with isolated on-disk
-state under a per-session tmp dir, waits for real `/health` and real registry
-self-registration, and tears every process down after. Critic has to be real
-here, not mocked: Sensei's mutating endpoints go through the same risk-gate
-middleware every organ enforces, and without a live Critic they'd fail closed
-to `high_risk` and 403 rather than the `reversible` tier `critic_core.py`
-actually assigns them.
-
-Sensei was chosen as the subject because it's the newest organ and the one
-whose cross-organ claims — `_write_memory`'s fire-and-forget write, `_publish_event`'s
-fire-and-forget bus publish — had never been exercised against real Memory or
-Communications services, only asserted via injected fakes in its own
-single-organ suite. Six tests now prove, over the wire: registry discovery
-actually resolves Sensei's peers by name; a `ready`-mode nudge really reaches
-`sensei.nudges` on the real bus as `nudge_offered`; a `watching`-mode nudge
-reaches it exactly once as `nudge_suppressed`, never queued to fire later
-(the one guarantee `sensei_core.py`'s docstring is built around); an accepted
-and a rejected `/sensei/respond` call each really land their low-confidence
-entry in the real Memory ledger, correctly tagged and owned; and Sensei's
-mutating endpoints really do clear the live Critic gate unbypassed, with no
-`X-Executive-Approved` or `X-Bypass-Safety` escape hatch used.
-
-`run_all_tests.sh` now runs `live_integration/` as its own step, after the
-per-organ loop and before the tui tool, so a full run still says one thing:
-pass or fail. Fire-and-forget writes are asserted with a short poll rather
-than an instant check, since the whole point of fire-and-forget is that the
-HTTP response doesn't wait on it landing.
-
-Sensei's actual Observe → Detect pattern-detection loop (editor/shell/writing
-watchers) is still not built — this pass only proved that the delivery half
-Sensei already has behaves correctly across real process boundaries. That
-remains the next open thread on Sensei specifically, separate from the
-integration-suite gap this update closes.
-
-**Update, Sensei's first real detector — the shell chain watcher:**
-
-The prior update closed the "no cross-organ integration tests" gap but
-explicitly left Sensei's actual Observe → Detect loop unbuilt — only the
-mode-toggle/delivery skeleton existed. This pass builds the first real
-detector against that skeleton: a shell command-chain watcher, matching
-`Digital_Sensei.md`'s own example verbatim ("repeated chain → alias/script").
-
-`sensei/shell_detector.py` is a new, pure, dependency-free module: given a
-chronological list of shell commands, it finds any contiguous block of
-2–4 commands repeating verbatim at least 3 times, using the same
-"deterministic, always inspectable" philosophy `critic_core.py` already
-uses for the same reason — a detector that's sometimes right and
-sometimes not on identical input erodes trust in every nudge after it.
-Redundant shorter sub-chains already covered by a longer match are
-dropped rather than separately reported.
-
-A new `POST /sensei/detect/shell` endpoint in `main.py` is the only thing
-that wires that pure function to anything stateful: it runs detection,
-then routes each new candidate through the exact same `op_nudge` gate
-`/sensei/nudge` already uses — mode is still decided at generation time,
-nothing about this new path bypasses that guarantee. "New" is tracked via
-a small addition to `sensei_core.py` (`seen_chains.json`, alongside the
-existing `state.json`/`nudge_history.jsonl` pattern) so a watcher can
-re-scan the same rolling history window on every tick without re-nudging
-about a chain that's still sitting there. `critic_core.py` gained one more
-rule classifying the new endpoint `reversible`, same tier as `/sensei/nudge`
-itself.
-
-The actual Observe half is `sensei/shell_watcher.sh` — a real, installable
-bash/zsh hook (`PROMPT_COMMAND`/`precmd`, or a cron/systemd timer) that
-reads real shell history and POSTs it to the endpoint above. It fails
-silently if Sensei is unreachable, same fire-and-forget convention as
-`_write_memory`/`_publish_event`.
-
-Tested at three levels: `shell_detector.py` in isolation (empty history,
-below-threshold, exact matches, the sub-chain redundancy rule, sort order,
-key stability — 10 tests), the dedup state functions in `sensei_core.py`
-(6 tests), the API layer including the "don't re-nudge on a second
-identical scan" behavior (5 tests) — and a new live cross-organ test,
-`test_shell_detector_end_to_end_nudges_writes_memory_and_dedupes` in
-`live_integration/`, proving the full loop for real: a real chain match,
-a real nudge through a real Critic gate, a real bus event, a real Memory
-write on accept, and no second nudge on a repeat scan — all across real
-process boundaries, not mocked. Full suite: all organ/tool suites plus
-`live_integration/` (14 tests total there now) still pass clean.
-
-One bug this pass caught in itself, worth recording so it doesn't recur:
-the first version of the live-integration fixture isolated Sensei's
-`state.json`/`nudge_history.jsonl` paths but not the new `seen_chains.json`
-one, so the new detector test passed once and then failed on every
-subsequent run — not because of anything wrong in Sensei, but because the
-test's own subprocess was silently falling through to the real
-`sensei/seen_chains.json` on disk and persisting real "already suggested"
-state across unrelated test invocations. Fixed by isolating
-`SENSEI_SEEN_CHAINS_PATH` alongside the other two; the leaked file was
-deleted from the repo. Recorded here as a reminder that every new
-persisted-state env var an organ gains needs a matching isolation line in
-`live_integration/conftest.py`, not just in that organ's own
-`tests/conftest.py`.
-
-Editor and writing detectors remain the open thread on Sensei — same
-shape should work for both (a pure detection function + a thin endpoint
-wiring it to `op_nudge`), but neither is built yet.
-
-**Update, Sensei's second detector — undo storms:**
-
-Same shape as the shell chain detector, deliberately: a new pure,
-dependency-free `sensei/editor_detector.py` (`find_undo_storms`) finds a
-run of consecutive `"undo"` events — any other event type breaks the
-run — whose count reaches 4 and whose total span is within 30 seconds,
-scoped per file. Digital_Sensei.md names "undo storms" explicitly in its
-Pattern Detection list, separate from the "repeated manual sequences"
-the shell detector already covers.
-
-A new `POST /sensei/detect/editor` endpoint wires it to the real
-`op_nudge` gate exactly like `/sensei/detect/shell` does, reusing the
-same `seen_chains.json`-backed dedup functions in `sensei_core.py`
-(already generic on a string key, as that file's own docstring
-anticipated) — a storm is keyed by file+start_ts+count, so a genuinely
-new storm later still nudges, but re-scanning the same event window
-doesn't repeat one already flagged. `critic_core.py` gained a matching
-`reversible` rule for the new path.
-
-Tested at the same three levels as the shell detector: `editor_detector.py`
-in isolation (12 tests — empty input, below-threshold, a non-undo event
-breaking a run, span-too-long rejection, per-file scoping, a trailing run
-at end-of-input, two separate storms, key stability, message formatting),
-API tests (6 tests, including the "new storm later on the same file still
-nudges" case, which is the one behavior meaningfully different from the
-shell detector's dedup), and a new live cross-organ test proving the full
-loop for real. Sensei's own suite: 63 tests. `live_integration/`: 8 tests.
-Full repo suite still passes clean.
-
-Deliberately NOT shipped this pass: a real editor watcher script
-analogous to `shell_watcher.sh`. Unlike a shell hook (bash/zsh's
-`PROMPT_COMMAND`/`precmd` are universal enough to write one script that
-covers the common case), there is no single verified way to get "on
-undo" events out of an arbitrary editor — it depends entirely on which
-editor and what its plugin system supports. Shipping a specific
-autocmd/keybinding snippet without being able to verify it actually
-fires would mean install instructions that might not work, which is
-worse than not shipping one. The endpoint itself is fully real and fully
-tested; README now says plainly that wiring a specific editor is the one
-piece of this pass that needs local hands, with steps for how to verify
-it once wired.
-
-Writing detectors remain the last open thread on Sensei's Observe →
-Detect loop.

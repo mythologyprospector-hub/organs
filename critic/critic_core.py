@@ -50,17 +50,6 @@ _RULES = [
     ("POST", r"^/reflection/(enable|disable|configure)$", None, "reversible", "toggles a setting, reversible at any time"),
     ("POST", r"^/reflection/tick$", None, "reversible", "one manual reflection cycle, writes a low-confidence entry"),
 
-    # Sensei's mode toggle is the whole point of the "instant mute" design —
-    # if this fell through to the fail-closed default it would require an
-    # Executive approval round-trip just to go quiet, which defeats it
-    # entirely. Same reasoning as reflection's enable/disable above: purely
-    # local, ephemeral, and trivially reversible.
-    ("POST", r"^/sensei/mode$", None, "reversible", "toggles Sensei's watching/ready mode, reversible at any time"),
-    ("POST", r"^/sensei/nudge$", None, "reversible", "records a candidate nudge and decides delivery vs. suppression — no permanent state"),
-    ("POST", r"^/sensei/detect/shell$", None, "reversible", "runs stateless chain detection and routes any candidate through the same nudge gate — same tier as calling /sensei/nudge directly"),
-    ("POST", r"^/sensei/detect/editor$", None, "reversible", "runs stateless undo-storm detection and routes any candidate through the same nudge gate — same tier as /sensei/detect/shell"),
-    ("POST", r"^/sensei/respond$", None, "reversible", "records accept/reject of a nudge, writes a low-confidence memory entry — same tier as reflection tick"),
-
     ("POST", r"^/memory/proposals/[^/]+/decide$", None, "caution", "accepting this makes a fact canon"),
     ("POST", r"^/memory/scars/proposals/[^/]+/decide$", None, "caution", "accepting this makes a scar permanent, possibly superseding another"),
     ("POST", r"^/memory/promises/\d+/resolve$", None, "caution", "closes out a tracked commitment permanently"),

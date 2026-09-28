@@ -27,16 +27,6 @@ SELF_BASE_URL = os.environ.get("EXECUTIVE_BASE_URL", "http://localhost:8008")
 
 CAPABILITIES = ["create_goal", "submit_plan", "approve_step", "reject_step", "execute_next_step", "get_goal", "list_goals"]
 
-# Sized off Forge's own worst case: FORGE_GENERATE_TIMEOUT defaults to
-# 180s per Ollama call, and a /forge/build with max_retries set can
-# chain up to (1 + MAX_RETRIES_CAP) implementation regenerations plus
-# one test generation, each up to 180s, plus a Sandbox run per attempt
-# (Forge's own client-side Sandbox-call timeout is 120s) — all within
-# ONE call to /forge/build. The true worst case across those configured
-# ceilings is roughly half an hour; 1800s covers a realistic retry
-# chain without reaching all the way to that theoretical maximum. See
-# _execute_call's docstring for why this is one blunt, generic value
-# rather than special-cased per organ.
 STEP_EXECUTION_TIMEOUT = 1800.0
 
 app = create_organ_app(
@@ -89,27 +79,18 @@ def _execute_call(organ: str, method: str, path: str, body: dict):
     turning that into a clean 'step failed' result rather than crashing.
 
     STEP_EXECUTION_TIMEOUT is deliberately generous, not a quick
-    fail-fast value like Critic's own 5s check above. Forge's own
-    single generation call is independently configured for up to 180s
-    (FORGE_GENERATE_TIMEOUT), and a /forge/build call with max_retries
-    set can chain several of those plus several Sandbox runs in
-    sequence, all within ONE HTTP call to /forge/build. A short client
-    timeout here doesn't stop that work — Forge keeps running
-    regardless, with no way to know its caller gave up — it just makes
-    Executive give up on it, mark the step failed, and let the build's
-    eventual real result land in Forge's workspace completely orphaned
-    from the goal that requested it, with nothing in Executive
-    reflecting what actually happened.
+    fail-fast value like Critic's own 5s check above. Target work may be
+    long-running, and a short client timeout does not necessarily stop
+    the target; it can instead make Executive report a false step failure
+    while the target continues and the eventual result becomes detached
+    from the goal that requested it.
 
     This is deliberately one generic timeout, not special-cased per
     target organ or path — Executive treats every step the same way
     Critic evaluates every request the same way, by generic rule, not
     by knowing what any particular organ's endpoint specifically does.
-    The honest tradeoff: a step against a genuinely hung OTHER organ
-    (not Forge) now also takes this long to time out, instead of 15s.
-    That's judged the better failure mode of the two — a slow, correct
-    failure eventually reported, vs. a fast failure that's actually
-    wrong, silently orphaning real completed work."""
+    The tradeoff is that a genuinely hung target can take longer to fail,
+    but that avoids imposing a known-short timeout on otherwise valid work."""
     target_url = discover(organ)  # raises RegistryError if unreachable — that's fine, caller catches it
     payload = json.dumps(body or {}).encode("utf-8") if method.upper() in ("POST", "PUT", "DELETE") else None
     # X-Executive-Approved tells the target organ's own risk gate this

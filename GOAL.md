@@ -87,8 +87,6 @@ The current set includes:
 - I/O Interface
 - TUI
 
-Forge was deliberately removed and is not part of the architecture.
-
 ## Success condition
 
 Organs succeeds when Renaissance capabilities can rely on it as boring,

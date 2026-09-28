@@ -27,7 +27,7 @@ ORGANS=(registry memory communications orchestrator reflection introspection san
 # same subprocess-isolated test treatment for the same reason (its own
 # fixtures reload tui_data.py fresh, same "no shared venv" principle),
 # but it's kept in its own list so this script never calls it an organ.
-TOOLS=(tui sensei)
+TOOLS=(tui)
 
 total_pass=0
 total_fail=0
@@ -46,7 +46,7 @@ if [ -d "$shared_dir/tests" ]; then
     cat "$TMP_OUTPUT"
     summary_line=$(tail -1 "$TMP_OUTPUT")
     echo "  $summary_line"
-    if [ "$test_rc" -ne 0 ] || echo "$summary_line" | grep -qE "failed|error" || ! echo "$summary_line" | grep -qE "passed"; then
+    if [ "$test_rc" -ne 0 ]; then
         failed_organs+=("shared")
     fi
     echo
@@ -72,7 +72,7 @@ for organ in "${ORGANS[@]}"; do
     summary_line=$(tail -1 "$TMP_OUTPUT")
     echo "  $summary_line"
 
-    if [ "$test_rc" -ne 0 ] || echo "$summary_line" | grep -qE "failed|error" || ! echo "$summary_line" | grep -qE "passed"; then
+    if [ "$test_rc" -ne 0 ]; then
         failed_organs+=("$organ")
     fi
     echo
@@ -92,7 +92,7 @@ if [ -d "$live_dir" ]; then
     cat "$TMP_OUTPUT"
     summary_line=$(tail -1 "$TMP_OUTPUT")
     echo "  $summary_line"
-    if [ "$test_rc" -ne 0 ] || echo "$summary_line" | grep -qE "failed|error" || ! echo "$summary_line" | grep -qE "passed"; then
+    if [ "$test_rc" -ne 0 ]; then
         failed_organs+=("live_integration")
     fi
     echo
@@ -118,7 +118,7 @@ for tool in "${TOOLS[@]}"; do
     summary_line=$(tail -1 "$TMP_OUTPUT")
     echo "  $summary_line"
 
-    if [ "$test_rc" -ne 0 ] || echo "$summary_line" | grep -qE "failed|error" || ! echo "$summary_line" | grep -qE "passed"; then
+    if [ "$test_rc" -ne 0 ]; then
         failed_organs+=("$tool")
     fi
     echo

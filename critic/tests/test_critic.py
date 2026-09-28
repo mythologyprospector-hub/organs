@@ -27,25 +27,6 @@ def test_communications_publish_is_reversible(cc):
     assert result["risk_tier"] == "reversible"
 
 
-def test_sensei_mode_toggle_is_reversible_not_gated(cc):
-    """The whole point of Sensei's mute button is that it's instant —
-    if this endpoint fell through to the fail-closed default it would
-    require an Executive approval round-trip just to go quiet."""
-    result = cc.evaluate("sensei", "POST", "/sensei/mode", {"mode": "ready"})
-    assert result["risk_tier"] == "reversible"
-    assert result["requires_human_approval"] is False
-
-
-def test_sensei_nudge_and_respond_are_reversible(cc):
-    for path, body in [
-        ("/sensei/nudge", {"kind": "shell", "message": "x", "source": "shell_watcher"}),
-        ("/sensei/respond", {"nudge_ts": 1.0, "accepted": True}),
-    ]:
-        result = cc.evaluate("sensei", "POST", path, body)
-        assert result["risk_tier"] == "reversible"
-        assert result["requires_human_approval"] is False
-
-
 def test_sandbox_job_network_off_is_safe(cc):
     result = cc.evaluate("sandbox", "POST", "/sandbox/jobs", {"language": "python", "network": False})
     assert result["risk_tier"] == "safe"

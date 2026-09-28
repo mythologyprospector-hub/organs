@@ -67,16 +67,11 @@ def test_unknown_goal_returns_error_envelope(api_client):
     assert r.json()["error"]["code"] == "executive_error"
 
 def test_execute_call_uses_generous_timeout_not_15_seconds(tmp_path, monkeypatch):
-    """Regression test: _execute_call used to hard-code a 15s client
-    timeout for every step, regardless of target. Forge's own single
-    generation call is independently configured for up to 180s
-    (FORGE_GENERATE_TIMEOUT), and a /forge/build call with max_retries
-    set can chain several of those plus several Sandbox runs within ONE
-    call — routinely exceeding 15s with no code bug involved. A short
-    timeout here didn't stop that work (Forge keeps running with no
-    way to know its caller gave up); it just made Executive report a
-    false 'step failed' while the build's real result later landed in
-    Forge's workspace orphaned from the goal that requested it."""
+    """Regression test: _execute_call must allow long-running target work.
+    A short caller timeout can make Executive report a step failed while
+    the target continues running, leaving the eventual result disconnected
+    from the goal that requested it. The timeout is deliberately generic
+    rather than tied to any particular organ or endpoint."""
     import importlib
     monkeypatch.setenv("EXECUTIVE_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("EXECUTIVE_BASE_URL", "http://localhost:8008")
@@ -88,7 +83,7 @@ def test_execute_call_uses_generous_timeout_not_15_seconds(tmp_path, monkeypatch
     import main
     importlib.reload(main)
 
-    monkeypatch.setattr(main, "discover", lambda organ: "http://forge-fake")
+    monkeypatch.setattr(main, "discover", lambda organ: "http://target-fake")
 
     captured = {}
 
@@ -106,7 +101,7 @@ def test_execute_call_uses_generous_timeout_not_15_seconds(tmp_path, monkeypatch
 
     monkeypatch.setattr(main.urllib.request, "urlopen", fake_urlopen)
 
-    main._execute_call("forge", "POST", "/forge/build", {"spec": "x", "max_retries": 3})
+    main._execute_call("target", "POST", "/long_running", {"request": "x"})
 
     assert captured["timeout"] == main.STEP_EXECUTION_TIMEOUT
-    assert captured["timeout"] >= 900  # generous enough for a real multi-attempt retry chain
+    assert captured["timeout"] >= 900  # generous enough for long-running target work

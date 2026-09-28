@@ -13,11 +13,6 @@ than this file should.
 
 ## The one rule above all others
 
-**Finish the organ before starting the next one.** This project exists
-because an earlier one (Akasha) didn't hold this line — things got started,
-half-wired, and abandoned (a forge loop, a guard module that never got
-connected to anything). "Finished" has a concrete bar here, not a vibe:
-
 - [ ] Uses `organ_base.create_organ_app()` — has real `/health` and `/info`
 - [ ] Registers via `organ_client.attach_to_registry()`
 - [ ] Has a test suite that exercises its actual logic, not just mocks that
@@ -87,50 +82,6 @@ This codebase has already been bitten by the same class of bug, four
 times now: **a mock that quietly diverges from what the real thing
 actually does.**
 
-- Sandbox's first `_run()` raised an exception when Docker wasn't
-  installed, instead of returning the clean result every other organ's
-  `_run()` returns. The mocked "Docker unavailable" test passed anyway,
-  because the fake simulated a return value the real function never
-  actually produced. A live run — no Docker, for real — crashed instead of
-  reporting cleanly, and caught it immediately.
-- The same `_run()` had a second, different gap past that fix:
-  `PermissionError` (docker present but not executable) wasn't caught
-  alongside `FileNotFoundError` (docker missing entirely) — a distinction
-  invisible in an environment lacking Docker outright, since only one of
-  the two exceptions could ever fire there. An external review running
-  the suite somewhere docker exists-but-isn't-executable caught it.
-- Introspection's disk collector needed a real `df` run against a live
-  filesystem to catch that it doesn't filter FUSE-backed network mounts —
-  a real, honestly-documented limitation a synthetic test fixture would
-  never have surfaced.
-- The real-Docker test itself, once it existed, still hardcoded
-  `rc == 127` — assuming every environment this ever runs in has no
-  working Docker at all. True on the machine Sandbox was originally
-  built on; false on mythos1, where Sandbox is actually meant to run
-  real jobs and Docker is installed and working. The live test designed
-  specifically to avoid this bug class still smuggled in one narrower
-  assumption of its own. Caught live on mythos1, fixed to assert what
-  the test's own docstring already said mattered — `_run()` never
-  raises, and its result agrees with whichever real state Docker is in
-  — rather than assuming only one such state exists.
-- Forge's `ollama_generate` caught `urllib.error.URLError` for a failed
-  generation call, on the reasonable-looking assumption that any real
-  network failure would come through as one. It doesn't: urllib only
-  wraps CONNECT-phase failures in `URLError` — `h.request()` is inside
-  its own try/except in `do_open()`. A failure while READING the
-  response (`h.getresponse()`) is outside that try/except entirely and
-  propagates as a raw `TimeoutError` instead. Caught live on mythos1,
-  where the connection to Ollama succeeded (the model was cold-loading)
-  but generation didn't finish inside the test's 5s timeout — the exact
-  gap the organ's own live-Ollama test exists to catch, catching it on
-  the very first real run. Fixed by catching `OSError` instead of the
-  narrower `URLError` (`URLError` is itself an `OSError` subclass, so
-  this is strictly broader, not a different mechanism), with a
-  timeout-specific message distinguishing "unreachable" from "reached,
-  but too slow." A synthetic slow-server test now reproduces the exact
-  failure shape as a permanent regression test, rather than relying on
-  a live Ollama being slow to catch it again.
-
 The standing rule from all five: **when a component's whole job is to
 report truthfully on something real (a subprocess result, a filesystem, a
 dependency's availability), at least one test in its suite must call the
@@ -142,14 +93,12 @@ path doesn't apply here" can itself have more than one shape — don't
 assume the one unhappy path your own environment reproduces is the only
 one that exists.
 
-**Known open gap, not yet fixed:** Orchestrator shells out to
-`systemctl`/`docker inspect` — the same class of external-truth
-reporting as Sandbox — but every one of its 41 tests goes through
-`fake_runner`; there is currently no test anywhere in `orchestrator/
-tests/` that calls the real, unmocked `_run()`. By this section's own
-rule, Orchestrator hasn't actually cleared the bar yet. Flagged, not
-fixed — next time Orchestrator gets touched, add a live test mirroring
-Sandbox's, before adding anything else.
+**Orchestrator has cleared this gap:** its suite now includes a live,
+unmocked `_run()` regression test against a real external dependency.
+The test accepts both valid environmental states — Docker available or
+absent — and verifies that the real subprocess path reports the state
+without an unhandled exception. This keeps the standing rule above
+current rather than leaving a completed testing gap documented as open.
 
 For organs that make multi-step or externally-effecting calls (Reflection,
 Executive, I/O Interface), the standing pattern is **dependency injection**:

@@ -159,21 +159,5 @@
     ],
     "first_registered": 1786910441.0012844,
     "last_heartbeat": 1790081684.3117065
-  },
-  "sensei": {
-    "name": "sensei",
-    "base_url": "http://localhost:8012",
-    "version": "0.1.0",
-    "capabilities": [
-      "status",
-      "mode",
-      "nudge",
-      "history",
-      "respond",
-      "detect_shell",
-      "detect_editor"
-    ],
-    "first_registered": 1787629279.707855,
-    "last_heartbeat": 1787794476.9691103
   }
 }
