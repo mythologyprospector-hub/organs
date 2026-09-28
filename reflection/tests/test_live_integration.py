@@ -16,7 +16,7 @@ def test_reflection_live_memory_ollama_chain(monkeypatch, tmp_path):
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
-            if self.path.startswith("/registry/organs/memory"):
+            if self.path.startswith("/registry/organs/memory") or self.path.startswith("/registry/organs/critic"):
                 body = json.dumps({
                     "status": "alive",
                     "base_url": f"http://127.0.0.1:{self.server.server_port}",
@@ -47,6 +47,12 @@ def test_reflection_live_memory_ollama_chain(monkeypatch, tmp_path):
 
             if self.path == "/registry/register":
                 body = b'{"status":"registered"}'
+            elif self.path == "/critic/evaluate":
+                body = json.dumps({
+                    "risk_tier": "safe",
+                    "reasoning": "live integration test",
+                    "requires_human_approval": False,
+                }).encode()
             elif self.path == "/api/generate":
                 received["ollama"].append(request)
                 body = json.dumps({"response": "A live reflection was generated."}).encode()
