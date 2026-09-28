@@ -125,8 +125,6 @@ The important decisions are:
 
 - Organs exists solely to serve Renaissance.
 - The former Digital Djinn/coding-agent mission is retired.
-- Forge is not part of the runtime architecture and must not be resurrected
-  as a hidden dependency.
 - The runtime substrate remains modular so Renaissance domain capabilities can
   evolve independently.
 - Organs Memory is runtime infrastructure, not Renaissance's epistemic canon.

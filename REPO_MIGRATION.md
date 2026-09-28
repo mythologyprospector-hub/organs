@@ -3,7 +3,7 @@
 Organs is the version-controlled home of the Renaissance runtime substrate.
 
 The repository was initialized from the existing /srv/organs implementation
-after Forge was deliberately removed from the live system.
+from the current live system.
 
 ## Baseline rules
 
