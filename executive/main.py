@@ -27,16 +27,6 @@ SELF_BASE_URL = os.environ.get("EXECUTIVE_BASE_URL", "http://localhost:8008")
 
 CAPABILITIES = ["create_goal", "submit_plan", "approve_step", "reject_step", "execute_next_step", "get_goal", "list_goals"]
 
-# Sized off Forge's own worst case: FORGE_GENERATE_TIMEOUT defaults to
-# 180s per Ollama call, and a /forge/build with max_retries set can
-# chain up to (1 + MAX_RETRIES_CAP) implementation regenerations plus
-# one test generation, each up to 180s, plus a Sandbox run per attempt
-# (Forge's own client-side Sandbox-call timeout is 120s) — all within
-# ONE call to /forge/build. The true worst case across those configured
-# ceilings is roughly half an hour; 1800s covers a realistic retry
-# chain without reaching all the way to that theoretical maximum. See
-# _execute_call's docstring for why this is one blunt, generic value
-# rather than special-cased per organ.
 STEP_EXECUTION_TIMEOUT = 1800.0
 
 app = create_organ_app(
