@@ -11,8 +11,6 @@ The repository was originally developed around a local coding-agent experiment.
 That experiment led to useful runtime mechanisms: Registry, BUS, Memory,
 Sandbox, Critic, Executive, Telemetry, Introspection, and related tooling.
 
-Forge was later removed deliberately.
-
 ## Current interpretation
 
 Those mechanisms are retained because they are useful runtime primitives for
