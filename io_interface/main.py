@@ -8,6 +8,9 @@ import urllib.request
 from pathlib import Path
 
 from pydantic import BaseModel
+from fastapi.responses import HTMLResponse
+
+from web_ui import render
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
 
@@ -128,6 +131,11 @@ def _renaissance_handoff(text):
 
 class HandleRequest(BaseModel):
     text: str
+
+
+@app.get("/", response_class=HTMLResponse)
+def web_ui():
+    return render()
 
 
 @app.post("/io/handle")
