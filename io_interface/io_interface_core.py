@@ -21,7 +21,7 @@ def _build_memory_promise(m): return "/memory/promises", {"text": m.group(1).str
 def _build_introspect_summary(m): return "/introspect/summary", None
 def _build_introspect_ollama(m): return "/introspect/ollama", None
 def _build_introspect_docker(m): return "/introspect/docker", None
-def _build_orchestrator_status(m): return f"/orchestrator/services/{m.group(1).strip()}", None
+def _build_orchestrator_status(m):\n    service = (m.group(1) or m.group(2)).strip()\n    return f"/orchestrator/services/{service}", None
 def _build_orchestrator_restart(m): return f"/orchestrator/services/{m.group(1).strip()}/restart", None
 def _build_orchestrator_stop(m): return f"/orchestrator/services/{m.group(1).strip()}/stop", None
 def _build_orchestrator_start(m): return f"/orchestrator/services/{m.group(1).strip()}/start", None
@@ -46,7 +46,7 @@ CATALOG = [
     {"name": "orchestrator_restart", "organ": "orchestrator", "method": "POST", "pattern": re.compile(r"restart (?:the\s+)?(\w[\w.-]*)", re.I), "build": _build_orchestrator_restart, "example": "restart ollama"},
     {"name": "orchestrator_stop", "organ": "orchestrator", "method": "POST", "pattern": re.compile(r"stop (?:the\s+)?(\w[\w.-]*)", re.I), "build": _build_orchestrator_stop, "example": "stop oi-sandbox"},
     {"name": "orchestrator_start", "organ": "orchestrator", "method": "POST", "pattern": re.compile(r"start (?:the\s+)?(\w[\w.-]*)", re.I), "build": _build_orchestrator_start, "example": "start oi-sandbox"},
-    {"name": "orchestrator_status", "organ": "orchestrator", "method": "GET", "pattern": re.compile(r"\b(?:is|status of)\s+(\w[\w.-]*)(?:\s+running)?", re.I), "build": _build_orchestrator_status, "example": "is ollama running"},
+    {"name": "orchestrator_status", "organ": "orchestrator", "method": "GET", "pattern": re.compile(r"\b(?:is\s+(\w[\w.-]*)\s+running|status of\s+(\w[\w.-]*))\b", re.I), "build": _build_orchestrator_status, "example": "is ollama running"},
     {"name": "sandbox_run_python", "organ": "sandbox", "method": "POST", "pattern": re.compile(r"run this python(?: code)?:\s*(.+)", re.I | re.S), "build": _build_sandbox_python, "example": "run this python code: print(1+1)"},
 ]
 
