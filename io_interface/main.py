@@ -120,7 +120,9 @@ def _renaissance_handoff(text):
     try:
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             return json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+    except (urllib.error.URLError, TimeoutError, ValueError, UnicodeError):
+        # An unavailable or malformed semantic service must not break the
+        # existing operational front door or manufacture a disposition.
         return None
 
 
