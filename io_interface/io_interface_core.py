@@ -21,7 +21,9 @@ def _build_memory_promise(m): return "/memory/promises", {"text": m.group(1).str
 def _build_introspect_summary(m): return "/introspect/summary", None
 def _build_introspect_ollama(m): return "/introspect/ollama", None
 def _build_introspect_docker(m): return "/introspect/docker", None
-def _build_orchestrator_status(m):\n    service = (m.group(1) or m.group(2)).strip()\n    return f"/orchestrator/services/{service}", None
+def _build_orchestrator_status(m):
+    service = (m.group(1) or m.group(2)).strip()
+    return f"/orchestrator/services/{service}", None
 def _build_orchestrator_restart(m): return f"/orchestrator/services/{m.group(1).strip()}/restart", None
 def _build_orchestrator_stop(m): return f"/orchestrator/services/{m.group(1).strip()}/stop", None
 def _build_orchestrator_start(m): return f"/orchestrator/services/{m.group(1).strip()}/start", None
