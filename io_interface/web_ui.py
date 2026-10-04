@@ -82,16 +82,26 @@ send.addEventListener("click", async () => {
     });
     const data = await response.json();
 
+    if (!response.ok) {
+      disposition.textContent = "HTTP " + response.status;
+      details.textContent = data.detail || data.message || "The I/O endpoint returned an error.";
+      raw.textContent = JSON.stringify(data, null, 2);
+      return;
+    }
+
     disposition.textContent = data.disposition || (data.matched ? "operational" : "unknown");
 
     if (data.disposition) {
       const parts = [
         data.capability ? "capability: " + data.capability : "",
-        data.mode ? "mode: " + data.mode : ""
+        data.mode ? "mode: " + data.mode : "",
+        data.expression ? "expression: " + data.expression : ""
       ].filter(Boolean);
-      details.textContent = parts.join(" · ");
+      details.textContent = parts.join(" · ") || "Renaissance returned a disposition.";
     } else if (data.message) {
       details.textContent = data.message;
+    } else {
+      details.textContent = "The I/O interface returned a response without a detail message.";
     }
 
     raw.textContent = JSON.stringify(data, null, 2);
