@@ -30,6 +30,19 @@ def test_non_operational_expression_reaches_renaissance_handoff():
     assert result["mode"] == "answer"
 
 
+def test_ambiguous_expression_reaches_renaissance_before_operational_execution():
+    text = "Something is wrong with this."
+
+    def handoff(received):
+        assert received == text
+        return {"expression": received, "disposition": "clarify"}
+
+    result = op_interpret(text, handoff)
+
+    assert result["expression"] == text
+    assert result["disposition"] == "clarify"
+
+
 def test_handoff_result_cannot_execute_or_authorize():
     text = "Something is wrong with this."
 
