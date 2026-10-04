@@ -1,3 +1,5 @@
+![Organs social preview](organs.jpeg)
+
 # Organs
 
 **The runtime substrate for Renaissance.**
