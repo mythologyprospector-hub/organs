@@ -1,0 +1,99 @@
+name: Human Doorway integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "io_interface/**"
+      - "shared/**"
+      - "registry/**"
+      - ".github/workflows/human-doorway-integration.yml"
+  pull_request:
+    paths:
+      - "io_interface/**"
+      - "shared/**"
+      - "registry/**"
+      - ".github/workflows/human-doorway-integration.yml"
+  workflow_dispatch:
+
+jobs:
+  doorway-transport:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Organs
+        uses: actions/checkout@v4
+
+      - name: Checkout Renaissance
+        uses: actions/checkout@v4
+        with:
+          repository: mythologyprospector-hub/renaissance
+          path: renaissance
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: python -m pip install fastapi uvicorn pydantic
+
+      - name: Start Registry
+        working-directory: registry
+        run: nohup uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/registry.log 2>&1 &
+
+      - name: Start Renaissance Human Doorway
+        working-directory: renaissance/runtime/human_doorway
+        run: |
+          nohup env ORGAN_REGISTRY_URL=http://127.0.0.1:8000 RENAISSANCE_BASE_URL=http://127.0.0.1:8010             uvicorn main:app --host 127.0.0.1 --port 8010 > /tmp/renaissance.log 2>&1 &
+
+      - name: Start Organs I/O Interface
+        working-directory: io_interface
+        run: |
+          nohup env ORGAN_REGISTRY_URL=http://127.0.0.1:8000 IO_BASE_URL=http://127.0.0.1:8009             PYTHONPATH=../shared uvicorn main:app --host 127.0.0.1 --port 8009 > /tmp/io.log 2>&1 &
+
+      - name: Wait for services
+        run: |
+          for url in             http://127.0.0.1:8000/health             http://127.0.0.1:8010/health             http://127.0.0.1:8009/health; do
+            for i in $(seq 1 30); do
+              curl --fail --silent "$url" >/dev/null && break
+              sleep 1
+            done
+            curl --fail --silent "$url" >/dev/null
+          done
+
+      - name: Verify Registry discovered Renaissance
+        run: |
+          curl --fail --silent http://127.0.0.1:8000/registry/organs/renaissance | tee /tmp/renaissance-registration.json
+          grep -q '"name":"renaissance"' /tmp/renaissance-registration.json
+
+      - name: Verify direct Renaissance doorway
+        run: |
+          curl --fail --silent             -H 'Content-Type: application/json'             -d '{"text":"I want to learn how to read a Linux process map."}'             http://127.0.0.1:8010/renaissance/doorway | tee /tmp/direct.json
+          grep -q '"disposition":"capability_request"' /tmp/direct.json
+          grep -q '"capability":"learn"' /tmp/direct.json
+
+      - name: Verify real Organs I/O -> Renaissance transport
+        run: |
+          curl --fail --silent             -H 'Content-Type: application/json'             -d '{"text":"I want to learn how to read a Linux process map."}'             http://127.0.0.1:8009/io/interpret | tee /tmp/handoff.json
+          grep -q '"disposition":"capability_request"' /tmp/handoff.json
+          grep -q '"capability":"learn"' /tmp/handoff.json
+          grep -q '"expression":"I want to learn how to read a Linux process map."' /tmp/handoff.json
+
+      - name: Verify operational catalog remains local
+        run: |
+          curl --fail --silent             -H 'Content-Type: application/json'             -d '{"text":"memory stats"}'             http://127.0.0.1:8009/io/interpret | tee /tmp/operational.json
+          grep -q '"matched":true' /tmp/operational.json
+          grep -q '"organ":"memory"' /tmp/operational.json
+
+      - name: Verify ambiguity fails closed through real transport
+        run: |
+          curl --fail --silent             -H 'Content-Type: application/json'             -d '{"text":"Something is wrong with this."}'             http://127.0.0.1:8009/io/handle | tee /tmp/ambiguous.json
+          grep -q '"disposition":"clarify"' /tmp/ambiguous.json
+          grep -q '"action_taken":false' /tmp/ambiguous.json
+
+      - name: Show service logs on failure
+        if: failure()
+        run: |
+          cat /tmp/registry.log || true
+          cat /tmp/renaissance.log || true
+          cat /tmp/io.log || true
