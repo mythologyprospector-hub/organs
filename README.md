@@ -1,4 +1,4 @@
-![Organs social preview](organs.jpeg)
+![Organs social preview](assets/organs.jpeg)
 
 # Organs
 
