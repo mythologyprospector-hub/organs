@@ -95,3 +95,16 @@ This section installs the shared Project Seed operating commitments in this repo
 The universal reference is [Project Seed — Agent Operating Constitution](https://github.com/mythologyprospector-hub/project_seed/blob/main/AGENTS.md), supported by its [Human Operating Profile](https://github.com/mythologyprospector-hub/project_seed/blob/main/HUMAN.md), [Document Standard](https://github.com/mythologyprospector-hub/project_seed/blob/main/DOCS.md), and [Organs Integration Contract](https://github.com/mythologyprospector-hub/project_seed/blob/main/ORGANS.md).
 
 These references supplement rather than replace this repository's existing governing records. If a shared rule appears to conflict with local canon, a license, a security boundary, or a recorded decision, do not silently choose one or delete either side. Preserve the records, inspect the conflict, and surface the consequential decision to the human.
+
+## Private Repositories — Historical Reference Only (append-only)
+
+A repository marked **private** that remains visible to the assistant is to be treated as **historical material, not an active project**. Its continued visibility does not grant permission or imply intent to resume using it.
+
+- A private repository may be inspected, when relevant, only to understand history, recover context, identify a potentially worthwhile idea, or inform a carefully bounded reference.
+- Do not use a private repository as the active working base, implementation target, dependency, integration partner, source of copied code, or place to continue development.
+- Do not port its implementation or revive its architecture by default. If a potentially valuable idea is found, treat it as a clue to evaluate independently in the current authorized project; preserve provenance and licensing, and design from the current project's canon rather than importing the old project's structure.
+- Do not modify, unarchive, publish, or otherwise reactivate a private historical repository as part of ordinary work.
+- Only the human owner can explicitly reactivate a specific private repository for a clearly bounded purpose. Until that explicit instruction exists, the default is **historical/reference only; do not use it anymore as an active project**.
+- Apply this rule even when repository contents are technically accessible through connected tools, local files, search results, prior conversations, or remembered context. Visibility is not authorization.
+
+This rule does not erase the repository's history or declare its ideas worthless. It preserves the record while preventing accidental continuation, reuse, or resurrection of retired work.
