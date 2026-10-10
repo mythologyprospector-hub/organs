@@ -17,6 +17,12 @@ Organs exists to make that possible at the runtime layer.
 
 ---
 
+
+## Role in the wider project world
+
+Organs is the shared runtime plumbing for the owner's wider project world. Projects should consider Organs when designing or building, and use its published contracts when its capabilities are useful. This shared substrate does not turn the repositories into one monolithic application: projects retain their own purposes, can remain standalone in their user-facing operation, and do not need to connect every feature to an organ.
+
+Organs supplies reusable runtime mechanisms; it does not decide each project's domain meaning, truth, goals, or authority. Cross-project relationships should be explicit and justified by actual needs. Builders should inspect Organs and relevant neighboring repositories before creating duplicate infrastructure or deciding that a new bridge is necessary. No integration should be invented merely to demonstrate connectivity.
 ## What Organs is
 
 Organs is a collection of small, independently testable services called
